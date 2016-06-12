@@ -24,7 +24,7 @@ abline(msteal)
 
 # -----------------------------------------------------------
 # check correlation of hit HR and pitched HR
-# variables are 65.5% correlated
+# variables are 97% correlated
 cor(mb_e$TEAM_BATTING_HR, mb_e$TEAM_PITCHING_HR, use = "complete.obs")
 
 mhr <- lm(mb_e$TEAM_BATTING_HR ~ mb_e$TEAM_PITCHING_HR)
