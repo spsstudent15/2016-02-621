@@ -1,0 +1,603 @@
+---
+title: "Moneyball Multiple Regression Model"
+output:
+  html_document:
+    highlight: pygments
+    keep_md: yes
+    theme: cerulean
+    toc: yes
+  pdf_document: default
+  word_document: default
+---
+
+```{r load-libaries, eval=TRUE, include=TRUE}
+library(fBasics)
+library(knitr)
+library(car)
+library(corrplot)
+library(alr3)
+```
+
+Source files can be found at
+[!github-link](https://github.com/scottkarr/IS621-HW1)
+
+```{r load-data, eval=TRUE,include=TRUE}
+
+BB.list <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/moneyball-training-data.csv", header=TRUE,
+    stringsAsFactors=FALSE, sep=",")
+BB.df0 <- data.frame(BB.list)
+#remove INDEX column
+BB.df0 <- BB.df0[,-1]
+BB.df0$TEAM_BATTING_1B <- # replace hits hits column with singles
+  as.numeric(
+      BB.df0$TEAM_BATTING_H-BB.df0$TEAM_BATTING_2B-BB.df0$TEAM_BATTING_3B-BB.df0$TEAM_BATTING_HR
+  )
+#remove TEAM_BATTING_H column
+BB.df0 <- BB.df0[,c(-2)]
+#remove TEAM_BASERUN_CS, TEAM_BATTING_HBP & TEAM_PITCHING_HR columns
+BB.df0  <- BB.df0[,-c(8,9,11)]
+BB.df <- BB.df0
+DescStats.df <- basicStats(BB.df)
+```
+
+# Data Dictionary
+variable            | definition                | effect      | Mo | M1 | M2
+----------------    | ------------------------  | ----------- | -- | -- | --
+`INDEX`             | Identification Variable   | None        | N  | N  | N
+`TARGET_WINS`       | Number of wins            | Positive    | Y  | Y  | Y
+`TEAM_BATTING_H`    | Base Hits by batters      | Removed     | N  | N  | N
+`TEAM_BATTING_1B`   | Singles by batters (1B)   | Positive    | Y  | Y  | Y
+`TEAM_BATTING_2B`   | Doubles by batters (2B)   | Positive    | Y  | Y  | Y
+`TEAM_BATTING_3B`   | Triples by batters (3B)   | Positive    | Y  | Y  | Y
+`TEAM_BATTING_HR`   | Homeruns by batters (4B)  | Positive    | Y  | Y  | Y
+`TEAM_BATTING_BB`   | Walks by batters          | Positive    | Y  | Y  | Y
+`TEAM_BATTING_SO`   | Strikeouts by batters     | Negative    | Y  | Y  | Y
+`TEAM_BATTING_HBP`  | Batters hit by pitch      | Removed     | N  | N  | N
+`TEAM_BASERUN_SB`   | Stolen bases              | Removed     | N  | N  | N
+`TEAM_BASERUN_CS`   | Caught stealing           | Removed     | N  | N  | N
+`TEAM_PITCHING_H`   | Hits allowed              | Negative    | Y  | Y  | Y
+`TEAM_PITCHING_HR`  | Homeruns allowed          | Removed     | N  | N  | N
+`TEAM_PITCHING_BB`  | Walks allowed             | Negative    | Y  | Y  | Y
+`TEAM_PITCHING_SO`  | Strikeouts by pitchers    | Positive    | Y  | Y  | Y
+`TEAM_FIELDING_E`   | Errors                    | Negative    | Y  | Y  | Y
+`TEAM_FIELDING_DP`  | Double Plays              | Positive    | Y  | Y  | Y
+
+# Exploring the data
+Many of the statistics in the data sets provided have been extrapolated using base 
+statistics from the deadball era circa ~1900-1920 and prior.  Outliers that need 
+to be adjusted can be found using the reference link [!baseball-almanac](http://www.baseball-almanac.com/recbooks/rb_stba2.shtml).  Note 
+that during the deadball era, a nearly soft ball was used which had dramatic effect on 
+power hitting and pitching statistics.  Any adjustment that rationalize the data from 
+this period into observations that include post WWII statistics should be bound by the 
+later era's limits so distributions aren't skewed.
+
+
+# Handle Missing Data
+variable            | NA count         |  NA %       |  action
+----------------    | ---------------- | ----------- | ---------------
+`TEAM_BATTING_SO`   |  102             |  4.48       | impute w/ median
+`TEAM_BASERUN_SB`   |  131             |  5.75       | impute w/ median
+`TEAM_BASERUN_CS`   |  772             | 33.89       | removed variable
+`TEAM_BATTING_HBP`  | 2085             | 91.53       | removed variable
+`TEAM_PITCHING_SO`  |  102             |  4.48       | impute w/ median
+`TEAM_FIELDING_DP`  |  286             | 12.55       | impute w/ median
+
+Deleting missing cases is the simplest strategy for dealing with missing data.  It 
+avoids the complexity and possible biases introduced by more sophisticated methods. 
+The drawback is throwing away infomration that might allow more precise inference. 
+If relatively few cases contain missing values deleting still leaves a large dataset 
+or to communicate a simple data analysis method, the deltion strategy is satisfactory.  
+
+Standard errors are larger after deleting cases because of fewer records to fit the model. 
+Larger standard errors results in less precise estimates.  (Faraway, LMR 2015, p.200) 
+
+Single imputation  . .  causes bias, while deletion causes a loss of information. 
+Multiple imputation is a way to reduce the bias caused by single imputation.  The 
+problem with single imputation is the value tends to be less variable than the value 
+we would have seen because it does not include the error variation normally seen in 
+observed data.  The idea behind multiple imputation is to reinclude that error variation. 
+(Faraway, LMR 2015, p.202)  
+
+Multiple imputation can be done using the Amelia package.  Per Faraway, the assumption is 
+the data is multivariate normal, so heavily skewed varibales should be log-transformed first.  
+
+#Impute Missing Data
+#####Build model for batting SO using Gelman approach
+```{r}
+BSO <- lm(data=BB.df, TEAM_BATTING_SO~.)
+summary(BSO)
+
+#take out double plays + pitching SO + SB as data set is incomplete
+
+BSO.1 <- lm(data=BB.df, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB)
+summary(BSO.1)
+
+#eliminate doubles
+BSO.2 <- lm(data=BB.df, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TEAM_BATTING_2B)
+summary(BSO.2)
+
+##All p-values are low with a 604.1 F-statistic and adjusted R squared of 0.7246
+#take a look
+par(mfrow=c(2,2))
+plot(BSO.2)
+plot(BSO.2$residuals)
+
+#prediction function
+pred.BSO <- round(predict(BSO.2, BB.df))
+impute <- function (a, a.impute){
+  ifelse (is.na(a), a.impute,a)
+}
+
+BSO.imp.1 <- impute(BB.df$TEAM_BATTING_SO, pred.BSO)
+
+#place back in the data base with imputed data for SO's
+
+BB.df$TEAM_BATTING_SO <- BSO.imp.1
+
+
+```
+
+#Build model for Pitching SO
+```{r}
+PSO <- lm(data=BB.df, TEAM_PITCHING_SO~.)
+summary(PSO)
+
+#take out double plays + SB as data set is incomplete
+
+PSO.1 <- lm(data=BB.df, TEAM_PITCHING_SO~. -TEAM_FIELDING_DP -TEAM_BASERUN_SB)
+summary(PSO.1)
+
+#all low P value and F statistic of 43710 with adj R squared of 0.9958
+#take a look
+par(mfrow=c(2,2))
+plot(PSO.1)
+plot(PSO.1$residuals)
+
+
+#place back in the data base with imputed data for SO's
+pred.PSO <- round(predict(PSO.1, BB.df))
+PSO.imp.1 <- impute(BB.df$TEAM_PITCHING_SO, pred.PSO)
+BB.df$TEAM_PITCHING_SO <- PSO.imp.1
+```
+
+#####Build model for SB
+```{r}
+SB <- lm(data=BB.df, TEAM_BASERUN_SB~.)
+summary(SB)
+
+#Take out DP as incomplete data
+SB.1 <- lm(data=BB.df, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP)
+summary(SB.1)
+
+#eliminate pitching BB's
+SB.2 <- lm(data=BB.df, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB)
+summary(SB.2)
+
+#eliminate triples
+SB.3 <- lm(data=BB.df, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B)
+summary(SB.3)
+
+#eliminate batting walks
+SB.4 <- lm(data=BB.df, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB)
+summary(SB.4)
+
+#eliminate singles
+SB.5 <- lm(data=BB.df, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_1B)
+summary(SB.5)
+
+#eliminate doubles
+SB.6 <- lm(data=BB.df, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_1B - TEAM_BATTING_2B)
+summary(SB.6)
+
+#eliminate pitching SO
+SB.7 <- lm(data=BB.df, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_1B - TEAM_BATTING_2B - TEAM_PITCHING_SO)
+summary(SB.7)
+
+#add singles back in
+SB.8 <- lm(data=BB.df, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_2B - TEAM_PITCHING_SO)
+summary(SB.8)
+
+#take pitching hits out
+SB.9 <- lm(data=BB.df, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_2B - TEAM_PITCHING_SO - TEAM_PITCHING_H)
+summary(SB.9)
+
+#all low P value and F statistic of 303.5 with adj R squared of 0.4386
+#take a look
+par(mfrow=c(2,2))
+plot(SB.9)
+plot(SB.9$residuals)
+
+#place back in the data base with imputed data for SB's
+pred.SB <- round(predict(SB.9, BB.df))
+SB.imp.1 <- impute(BB.df$TEAM_BASERUN_SB, pred.SB)
+BB.df$TEAM_BASERUN_SB <- SB.imp.1
+```
+
+#####Build model to replace DP
+```{r}
+DP <- lm(data=BB.df, TEAM_FIELDING_DP~.)
+summary(DP)
+
+#remove batting 2B's
+DP.1 <- lm(data=BB.df, TEAM_FIELDING_DP~.-TEAM_BATTING_2B)
+summary(DP.1)
+
+#remove batting 3B's
+DP.2 <- lm(data=BB.df, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TEAM_BATTING_3B)
+summary(DP.2)
+
+#remove batting 1B's
+DP.3 <- lm(data=BB.df, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TEAM_BATTING_3B - TEAM_BATTING_1B)
+summary(DP.3)
+
+#remove all remaining batting
+DP.4 <- lm(data=BB.df, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TEAM_BATTING_3B - TEAM_BATTING_1B - TEAM_BATTING_HR - TEAM_BATTING_SO - TEAM_BATTING_BB)
+summary(DP.4)
+
+#remove pitching strikeouts
+DP.5 <- lm(data=BB.df, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TEAM_BATTING_3B - TEAM_BATTING_1B - TEAM_BATTING_HR - TEAM_BATTING_SO - TEAM_BATTING_BB - TEAM_PITCHING_SO)
+summary(DP.5)
+
+
+#all low P value and F statistic of 259.2 with adj R squared of 0.3936
+#take a look
+par(mfrow=c(2,2))
+plot(DP.5)
+plot(DP.5$residuals)
+
+#place back in the data base with imputed data for SB's
+pred.DP <- round(predict(DP.5, BB.df))
+DP.imp.1 <- impute(BB.df$TEAM_FIELDING_DP, pred.DP)
+BB.df$TEAM_FIELDING_DP <- DP.imp.1
+
+#test new data set
+summary(BB.df)
+```
+
+
+#Preliminary Transformation
+####FIELDING ERRORS TRANSFORMATION
+```{r trx1, eval=TRUE, echo=TRUE}
+#most ever errors by a team is 639 by 1883 Philadelphia.  Prorating to 162 games gives a value of 1046.
+BB.df$TEAM_FIELDING_E[which(BB.df$TEAM_FIELDING_E > 1046)] <- 159
+```
+####PITCHING HITS TRANSFORMATION
+```{r trx2, eval=TRUE, echo=TRUE}
+#most ever hits by a team is 1730.  So replace all pitching hits >3000 to be conservative with the median
+BB.df$TEAM_PITCHING_H[which(BB.df$TEAM_PITCHING_H >3000)] <- 1518
+```
+####PITCHING STRIKEOUT TRANSFORMATION
+The most strikeouts thrown in a single season (unadjusted) that I could find was fewer that 1400.
+```{r trx3, eval=TRUE, echo=TRUE}
+#REVISIT THIS WITH A LEVERAGE POINT TEST FOR BAD OUTLIERS!
+#The TEAM_PITCHING_SO variable has 25 outliers that are far beyond the most team pitched strikeouts 
+#that have ever occurred. Here's the line of R code to find the count:
+nrow(data.frame(which(BB.df$TEAM_PITCHING_SO > 1450)))
+#Since those outliers skew the distribution severely, I would suggest that rather than transform the 
+#variable via a power transform we simply set those outliers to a more reasonable value, perhaps the 
+#value of the 3rd quartile (968). This can be done (if we choose) with the following line of R code:
+#replace pitching SO & pitching hits & errors outliers with median
+BB.df$TEAM_PITCHING_SO[which(BB.df$TEAM_PITCHING_SO >1450)] <- 813
+summary(BB.df)
+```
+####BATTING STRIKEOUT TRANSFORMATION
+```{r trx4, eval=TRUE, echo=TRUE}
+#First argument must be strictly positive.
+#summary( powerTransform( cbind( TEAM_BATTING_SO, TEAM_BASERUN_SB, TEAM_PITCHING_SO, TEAM_FIELDING_DP) ~ 1, BB.df)
+#This function call yields the "best" box-cox power transform exponent for each variable relative to the full data set #rather than limiting the results to being based solely on a single response/predictor pair.  The estimates are found in #the column labeled: "Est. Power". We need to round up or down to the nearest common transform as described here (reposted #from Blackboard discussion):
+```
+####BATTING SINGLE TRANSFORMATION
+```{r trx5, eval=TRUE, echo=TRUE}
+BB.df$TARGET_WINS[which(BB.df$TARGET_WINS <= 0)] <- 1
+m1 <- lm(BB.df$TARGET_WINS~log(BB.df$TEAM_BATTING_1B))
+#http://stats.stackexchange.com/questions/137059/find-distribution-and-transform-to-normal-distribution
+lambda <- c(-1,-0.5, -0.33, -0.25, 0, 0.25, 0.33, 0.5,1)
+#invResPlot(m1,lambda)
+#inverseResponsePlot(m1,key=TRUE)
+#lambda <- c(-1,-0.1811955,0,1)
+#RSS <- c(6847.993,6761.037,6764.793,6901.701)
+#plot(lambda,RSS,type="l",ylab=expression(RSS(lambda)),xlab=expression(lambda))
+#-1/3
+#ty <- y^(-1/3)
+#plot(density(ty,kern="gaussian"),type="l",main="Gaussian kernel density estimate",xlab=expression(Y^(-1/3)))
+#rug(ty)
+```
+
+# Correlations
+```{r correlation, eval=TRUE, echo=FALSE}
+par(cex = 0.65)
+corrplot(
+    cor(BB.df[c(1:13)]), 
+    type='lower', 
+    tl.srt=45,
+    #tl.pos = "d",
+    #is.corr=FALSE,
+    #cl.lim=c(-1,1),
+    addshade="positive",
+    addCoef.col = rgb(0,0,0,alpha=0.3),
+    addCoefasPercent = TRUE)
+#par(cex = cex.before)
+par(mfrow=c(1,1))
+```
+summary(BB.df)
+
+Generalized Equation for Multiple Regression
+\[
+\begin{aligned}
+\widehat{wins} &= \hat{\beta}_0 + 
+                    \hat{\beta}_1 \times singles  + 
+                    \hat{\beta}_2 \times doubles + 
+                    \hat{\beta}_3 \times triples +
+                    \hat{\beta}_4 \times homeruns + 
+                    \hat{\beta}_5 \times walks + 
+                    \hat{\beta}_6 \times strikeouts . . . +
+                    \end{aligned}
+\]
+
+# Full Panel
+```{r full, eval = TRUE,echo=TRUE}
+#wins x full panel
+pairs(TARGET_WINS~.,
+        data=BB.df,pch=".",gap=.5,upper.panel=panel.smooth)
+m1 <- lm(TARGET_WINS~., data = BB.df)
+StanRes1 <- rstandard(m1)
+
+summary(m1)
+
+par(mfrow=c(2,2))
+#SINGLES:                 transform skew before adding to model - high p-value
+plot(density(BB.df$TEAM_BATTING_1B),main="Singles");rug(BB.df$TEAM_BATTING_1B)
+plot(m1$model$TEAM_BATTING_1B,StanRes1,xlab="Singles",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_BATTING_1B,StanRes1),lty=2,col=2)
+
+#DOUBLES:                 add - high p-value
+plot(density(BB.df$TEAM_BATTING_2B),main="Doubles");rug(BB.df$EAM_BATTING_2B)
+plot(m1$model$TEAM_BATTING_2B,StanRes1,xlab="Doubles",ylab="Standardized 
+Residuals");abline(lsfit(m1$model$TEAM_BATTING_2B,StanRes1),lty=2,col=2)
+
+#TRIPLES:                 transform skew before adding to model - high p-value
+plot(density(BB.df$TEAM_BATTING_3B),main="Triples");rug(BB.df$TEAM_BATTING_3B)
+plot(m1$model$TEAM_BATTING_3B,StanRes1,xlab="Triples",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_BATTING_3B,StanRes1),lty=2,col=2)
+
+#HOMERUNS:                transform bimodal skew before adding to model - high p-value
+plot(density(BB.df$TEAM_BATTING_HR),main="Homeruns");rug(BB.df$TEAM_BATTING_HR)
+plot(m1$model$TEAM_BATTING_HR,StanRes1,xlab="Homeruns",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_BATTING_HR,StanRes1),lty=2,col=2)
+
+#WALKS:                   add
+plot(density(BB.df$TEAM_BATTING_BB),main="Walks");rug(BB.df$TEAM_BATTING_BB)
+plot(m1$model$TEAM_BATTING_BB,StanRes1,xlab="Walks",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_BATTING_BB,StanRes1),lty=2,col=2)
+
+#STRIKEOUTS:              transform bimodal skew before adding to model high p-value
+plot(density(BB.df$TEAM_BATTING_SO),main="Strikeouts");rug(BB.df$TEAM_BATTING_SO)
+plot(m1$model$TEAM_BATTING_SO,StanRes1,xlab="Strikeouts",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_BATTING_SO,StanRes1),lty=2,col=2)
+
+#HIT BY PITCH:            removed variable 
+#plot(density(BB.df$TEAM_BATTING_HBP,na.rm=TRUE),main="Hit By Pitch");rug(BB.df$TEAM_BATTING_HBP)
+#plot(m1$model$TEAM_BATTING_HBP,StanRes1,xlab="Singles",ylab="Standardized #Residuals");abline(lsfit(m1$model$TEAM_BATTING_HBP,StanRes1),lty=2,col=2)
+
+#STOLEN BASES:            transform skew before adding to model 
+plot(density(BB.df$TEAM_BASERUN_SB),main="Stolen Bases");rug(BB.df$TEAM_BASERUN_SB)
+plot(m1$model$TEAM_BASERUN_SB,StanRes1,xlab="Stolen Bases",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_BASERUN_SB,StanRes1),lty=2,col=2)
+
+#CAUGHT STEALING:         removed variable
+#plot(density(BB.df$TEAM_BASERUN_CS),main="Caught Stealing");rug(BB.df$TEAM_BASERUN_CS)
+#plot(m1$model$TEAM_BASERUN_CS,StanRes1,xlab="Caught Stealing",ylab="Standardized #Residuals");abline(lsfit(m1$model$TEAM_BASERUN_CS,StanRes1),lty=2,col=2)
+
+#PITCHING HITS:           removed variable
+#plot(density(BB.df$TEAM_PITCHING_H),main="Pitching Hits");rug(BB.df$TEAM_PITCHING_H)
+#plot(m1$model$TEAM_PITCHING_H,StanRes1,xlab="Pitching Hits",ylab="Standardized #Residuals");abline(lsfit(m1$model$TEAM_PITCHING_H,StanRes1),lty=2,col=2)
+
+#PITCHING HOMERUNS:       removed variable
+#plot(density(BB.df$TEAM_PITCHING_HR),main="Pitching Homeruns");rug(BB.df$TEAM_PITCHING_HR)
+#plot(m1$model$TEAM_PITCHING_HR,StanRes1,xlab="Pitching Homeruns",ylab="Standardized #Residuals");abline(lsfit(m1$model$TEAM_PITCHING_HR,StanRes1),lty=2,col=2)
+
+#PITCHING WALKS:          correlated with batting walks
+plot(density(BB.df$TEAM_PITCHING_BB),main="Pitching Walks");rug(BB.df$TEAM_PITCHING_BB)
+plot(m1$model$TEAM_PITCHING_BB,StanRes1,xlab="Pitching Walks",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_PITCHING_BB,StanRes1),lty=2,col=2)
+
+#PITCHING STRIKEOUTS:     add* - high p-value
+plot(density(BB.df$TEAM_PITCHING_SO, na.rm = TRUE),main="Pitching Strikeouts");rug(BB.df$TEAM_PITCHING_SO)
+plot(m1$model$TEAM_PITCHING_SO,StanRes1,xlab="Pitching Strikeouts",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_PITCHING_SO,StanRes1),lty=2,col=2)
+
+#FIELDING ERRORS:         transform skew before adding to model   
+plot(density(BB.df$TEAM_FIELDING_E),main="Fielding Errors");rug(BB.df$TEAM_FIELDING_E)
+plot(m1$model$TEAM_FIELDING_E,StanRes1,xlab="Fielding Errors",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_FIELDING_E,StanRes1),lty=2,col=2)
+
+#DOUBLE PLAYS:            add
+plot(density(BB.df$TEAM_FIELDING_DP),main="Fielding Doubleplay");rug(BB.df$TEAM_FIELDING_DP)
+plot(m1$model$TEAM_FIELDING_DP,StanRes1,xlab="Fielding Doubleplays",ylab="Standardized Residuals");abline(lsfit(m1$model$TEAM_FIELDING_DP,StanRes1),lty=2,col=2)
+par(mfrow=c(1,1))
+```
+
+#Model Mo (Baseline) using forward selection
+\[
+\begin{aligned}
+\widehat{wins} &= \hat{\beta}_0 + 
+                    \hat{\beta}_1 \times doubles + 
+                    \hat{\beta}_2 \times walks + 
+                    \hat{\beta}_3 \times pitching strikeouts . . . +
+                    \hat{\beta}_4 \times doubleplays                    
+                    \end{aligned}
+\]
+
+#Model Mo
+#Model M1
+#Model M2
+#Model M3
+#Predictions and Assessment
+#Conclusion
+#Appendicies . . .
+#### Slugging
+The most hits in a single season (unadjusted) is 1783--NL Philadelphia Phillies 1930.
+The most doubles in a single season (unadjusted) is 376--AL Texas in 2008.
+The most triples in a single season (unadjusted) is 153--NL Baltimore in 1894.
+Records that exceed these amounts should be adjusted either to NA or the median.
+
+```{r summary-slugging, eval=FALSE, include=FALSE}
+kable(DescStats.df[,c(15,2:4)],align='l',digits = c(0,2,0))
+```
+
+```{r boxplot-slugging, eval=FALSE, include=FALSE}
+boxplot(BB.df[,3:6],main="Baseball Team Stats", 
+        	xlab="Slugging") 
+```
+
+```{r slugging, eval=FALSE, include=FALSE}
+#wins x batting - slugging
+pairs(TARGET_WINS~TEAM_BATTING_1B+TEAM_BATTING_2B+TEAM_BATTING_3B+TEAM_BATTING_HR+TEAM_BATTING_BB+TEAM_BATTING_SO,
+        data=BB.df,pch=".",gap=.5,upper.panel=panel.smooth)
+m1 <- lm(TARGET_WINS~TEAM_BATTING_1B+TEAM_BATTING_2B+TEAM_BATTING_3B+TEAM_BATTING_HR+TEAM_BATTING_BB+TEAM_BATTING_SO
+                  , data = BB.df)
+
+par(mfrow=c(2,2))
+plot(m1, ask=FALSE)
+
+par(mfrow=c(3,3))
+StanRes1 <- rstandard(m1)
+plot(m1$model$TEAM_BATTING_1B,StanRes1,ylab="Standardized Residuals")
+plot(m1$model$TEAM_BATTING_2B,StanRes1,ylab="Standardized Residuals")
+plot(m1$model$TEAM_BATTING_3B,StanRes1,ylab="Standardized Residuals")
+plot(m1$model$TEAM_BATTING_HR,StanRes1,ylab="Standardized Residuals")
+plot(m1$model$TEAM_BATTING_BB,StanRes1,ylab="Standardized Residuals")
+plot(m1$model$TEAM_BATTING_SO,StanRes1,ylab="Standardized Residuals")
+plot(m1$fitted.values,StanRes1,ylab="Standardized Residuals",xlab="Fitted Values")
+
+par(mfrow=c(3,3))
+d <- density(m1$model$TARGET_WINS) # returns the density data
+plot(d) # plots the results 
+rug(m1$model$TARGET_WINS)
+
+d <- density(m1$model$TEAM_BATTING_1B) # returns the density data
+plot(d) # plots the results 
+rug(m1$model$TEAM_BATTING_1B)
+
+d <- density(m1$model$TEAM_BATTING_2B) # returns the density data
+plot(d) # plots the results 
+rug(m1$model$TEAM_BATTING_2B)
+
+d <- density(m1$model$TEAM_BATTING_3B) # returns the density data
+plot(d) # plots the results 
+rug(m1$model$TEAM_BATTING_3B)
+
+d <- density(m1$model$TEAM_BATTING_HR) # returns the density data
+plot(d) # plots the results 
+rug(m1$model$TEAM_BATTING_HR)
+
+d <- density(m1$model$TEAM_BATTING_BB) # returns the density data
+plot(d) # plots the results 
+rug(m1$model$TEAM_BATTING_BB)
+
+d <- density(m1$model$TEAM_BATTING_SO) # returns the density data
+plot(d) # plots the results 
+rug(m1$model$TEAM_BATTING_SO)
+
+par(mfrow=c(3,3))
+avPlots(m1, ~.,ask=FALSE,identify.points=TRUE)
+```
+
+#### On-Base
+102 strikeout NAs can remain as long as they're not counted in descriptive statistics 
+as observations.  2085 hit by pitch NAs disqualifies this field from use in the model.
+
+The most walks in a single season (unadjusted) is 835--AL Boston Red Sox in 1949.
+The fewest walks in a single season (unadjusted) is 282--NL St. Louis Cardinals 1908.
+Records that exceed these amounts should be adjusted either to NA or the median.
+
+```{r summary-onbase, eval=FALSE, include=FALSE}
+kable(DescStats.df[,c(5,6)],align='l',digits = c(0,2,0))
+```
+
+```{r boxplot-onbase, eval=FALSE, include=FALSE}
+boxplot(BB.df[,c(5,6)],main="Baseball Team Stats", 
+        	xlab="On Base") 
+```
+
+```{r onbase, eval=FALSE, include=FALSE}
+#wins x batting - on-base
+pairs(TARGET_WINS~TEAM_BATTING_BB+TEAM_BATTING_SO,
+        data=BB.df,pch=".",gap=.5,upper.panel=panel.smooth)
+ml.onbase <- lm(TARGET_WINS~TEAM_BATTING_BB+TEAM_BATTING_SO
+                  , data = BB.df)
+summary(ml.onbase)
+```
+
+#### Base Running
+131 stolen base NAs can & 772 caught stealing NAs can remain as long as they're not counted
+in descriptive statistics.
+
+The most stolen bases in a single season (unadjusted) is 426--NL New York in 1893.
+The most caught stealing bases count in a single season (unadjusted) is 191--AL NY in 1914.
+Records that exceed these amounts should be adjusted either to NA or the median.
+
+These statistics are co-linear and may be better used as a derived statistic for
+Expected value of team stolen bases E(SB) = SB * likelihood of success (SB/SB attempts)
+
+```{r summary-baserunning, eval=FALSE, include=FALSE}
+kable(DescStats.df[,7,8],align='l',digits = c(0,2,0))
+```
+
+```{r boxplot-baserunning, eval =FALSE, include=FALSE}
+boxplot(BB.df[,7,8],main="Baseball Team Stats", 
+        	xlab="Base Running") 
+```
+
+```{r baserunning, eval=FALSE, include=FALSE}
+#wins x batting - base running
+pairs(TARGET_WINS~TEAM_BASERUN_SB+TEAM_BASERUN_CS,
+        data=BB.df,pch=".",gap=.5,upper.panel=panel.smooth)
+ml.baserunning <- lm(TARGET_WINS~TEAM_BASERUN_SB+TEAM_BASERUN_CS
+                  , data = BB.df)
+summary(ml.baserunning)
+```
+
+#### Fielding
+286 Fielding error NAs can remain as long as they're not counted in descriptive statistics 
+as observations.  
+
+The most fielding errors in a single season (unadjusted) is 639--NL Philadelphia in 1883.
+The most fielding errors in a single season (unadjusted) post WWII is 234--NL Philadelphia in 1945.
+Records that exceed the post WWII amount should be adjusted either to NA or the median.
+
+```{r summary-fielding, eval=FALSE, include=FALSE}
+kable(DescStats.df[,13,14],align='l',digits = c(0,2,0))
+```
+
+```{r boxplot-fielding, eval=FALSE, include=FALSE}
+boxplot(BB.df[,13,14],main="Baseball Team Stats", 
+        	xlab="Fielding") 
+```
+
+```{r fielding, eval=FALSE, include=FALSE}
+#wins x batting - base running
+pairs(TARGET_WINS~TEAM_FIELDING_E+TEAM_FIELDING_DP,
+        data=BB.df,pch=".",gap=.5,upper.panel=panel.smooth)
+ml.fielding <- lm(TARGET_WINS~TEAM_FIELDING_E+TEAM_FIELDING_DP
+                  , data = BB.df)
+summary(ml.fielding)
+```
+
+#### Pitching
+The most hits given up in a single season (unadjusted) that I could find was fewer that 2000.
+The most homeruns given up in a single season (unadjusted) that I could find was fewer that 250.
+The most walks given up in a single season (unadjusted) that I could find was fewer that 800.
+The most strikeouts thrown in a single season (unadjusted) that I could find was fewer that 1400.
+Records that exceed these amount should be adjusted either to NA or the median.
+
+```{r summary-pitching, eval=FALSE, include=FALSE}
+kable(DescStats.df[,9:12],align='l',digits = c(0,2,0))
+```
+
+```{r boxplot-pitching, eval = FALSE, include=FALSE}
+boxplot(BB.df[,9:12],main="Baseball Team Stats", 
+        	xlab="Pitching") 
+```
+
+```{r pitching, eval = FALSE, include=FALSE}
+#wins x batting - pitching
+pairs(TARGET_WINS~TEAM_PITCHING_H+TEAM_PITCHING_HR+TEAM_PITCHING_BB+TEAM_PITCHING_SO,
+        data=BB.df,pch=".",gap=.5,upper.panel=panel.smooth)
+ml.pitching <- lm(TARGET_WINS~TEAM_PITCHING_H+TEAM_PITCHING_HR+TEAM_PITCHING_BB+TEAM_PITCHING_SO
+                  , data = BB.df)
+summary(ml.pitching)
+```
+
+

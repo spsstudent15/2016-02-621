@@ -1,0 +1,218 @@
+---
+title: "621 HW 1 v 3"
+author: "Jeff Nieman"
+date: "June 13, 2016"
+output: html_document
+---
+
+
+#####Creating a new column for batting singles and eliminating hits for batting
+```{r}
+
+mb_e <- read.csv("C:/Users/jenieman/Documents/CUNY/Data 621/moneyball-training-data.csv")  
+#eliminate index column
+mb_e1 <- mb_e[,-1]
+
+#add singles column for hitting
+mb_e1$TEAM_BATTING_1B <- as.numeric(mb_e1$TEAM_BATTING_H-mb_e1$TEAM_BATTING_2B-mb_e1$TEAM_BATTING_3B-mb_e1$TEAM_BATTING_HR)
+mb_e1 <- mb_e1[,-2]
+mb_e1 <- as.data.frame(mb_e1)
+```
+
+#####Eliminate HBP, CS, and pitching HR's.
+
+```{r}
+mb_red <- mb_e1[,-c(8,9,11)]
+
+```
+
+#####Build model for batting SO using Gelman approach
+```{r}
+BSO <- lm(data=mb_red, TEAM_BATTING_SO~.)
+summary(BSO)
+
+#take out double plays + pitching SO + SB as data set is incomplete
+
+BSO.1 <- lm(data=mb_red, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB)
+summary(BSO.1)
+
+#eliminate doubles
+BSO.2 <- lm(data=mb_red, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TEAM_BATTING_2B)
+summary(BSO.2)
+
+##All p-values are low with a 604.1 F-statistic and adjusted R squared of 0.7246
+#take a look
+par(mfrow=c(2,2))
+plot(BSO.2)
+plot(BSO.2$residuals)
+
+#prediction function
+pred.BSO <- round(predict(BSO.2, mb_red))
+impute <- function (a, a.impute){
+  ifelse (is.na(a), a.impute,a)
+}
+
+BSO.imp.1 <- impute(mb_red$TEAM_BATTING_SO, pred.BSO)
+
+#place back in the data base with imputed data for SO's
+
+mb_red1 <- mb_red
+mb_red1$TEAM_BATTING_SO <- BSO.imp.1
+
+
+```
+
+#Build model for Pitching SO
+```{r}
+PSO <- lm(data=mb_red1, TEAM_PITCHING_SO~.)
+summary(PSO)
+
+#take out double plays + SB as data set is incomplete
+
+PSO.1 <- lm(data=mb_red1, TEAM_PITCHING_SO~. -TEAM_FIELDING_DP -TEAM_BASERUN_SB)
+summary(PSO.1)
+
+#all low P value and F statistic of 43710 with adj R squared of 0.9958
+#take a look
+par(mfrow=c(2,2))
+plot(PSO.1)
+plot(PSO.1$residuals)
+
+
+#place back in the data base with imputed data for SO's
+pred.PSO <- round(predict(PSO.1, mb_red1))
+PSO.imp.1 <- impute(mb_red1$TEAM_PITCHING_SO, pred.PSO)
+mb_red2 <- mb_red1
+mb_red2$TEAM_PITCHING_SO <- PSO.imp.1
+```
+
+#####Build model for SB
+```{r}
+SB <- lm(data=mb_red2, TEAM_BASERUN_SB~.)
+summary(SB)
+
+#Take out DP as incomplete data
+SB.1 <- lm(data=mb_red2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP)
+summary(SB.1)
+
+#eliminate pitching BB's
+SB.2 <- lm(data=mb_red2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB)
+summary(SB.2)
+
+#eliminate triples
+SB.3 <- lm(data=mb_red2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B)
+summary(SB.3)
+
+#eliminate batting walks
+SB.4 <- lm(data=mb_red2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB)
+summary(SB.4)
+
+#eliminate singles
+SB.5 <- lm(data=mb_red2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_1B)
+summary(SB.5)
+
+#eliminate doubles
+SB.6 <- lm(data=mb_red2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_1B - TEAM_BATTING_2B)
+summary(SB.6)
+
+#eliminate pitching SO
+SB.7 <- lm(data=mb_red2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_1B - TEAM_BATTING_2B - TEAM_PITCHING_SO)
+summary(SB.7)
+
+#add singles back in
+SB.8 <- lm(data=mb_red2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_2B - TEAM_PITCHING_SO)
+summary(SB.8)
+
+#take pitching hits out
+SB.9 <- lm(data=mb_red2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_3B -TEAM_BATTING_BB - TEAM_BATTING_2B - TEAM_PITCHING_SO - TEAM_PITCHING_H)
+summary(SB.9)
+
+#all low P value and F statistic of 303.5 with adj R squared of 0.4386
+#take a look
+par(mfrow=c(2,2))
+plot(SB.9)
+plot(SB.9$residuals)
+
+#place back in the data base with imputed data for SB's
+pred.SB <- round(predict(SB.9, mb_red2))
+SB.imp.1 <- impute(mb_red2$TEAM_BASERUN_SB, pred.SB)
+mb_red3 <- mb_red2
+mb_red3$TEAM_BASERUN_SB <- SB.imp.1
+```
+
+#####Build model to replace DP
+```{r}
+DP <- lm(data=mb_red3, TEAM_FIELDING_DP~.)
+summary(DP)
+
+#remove batting 2B's
+DP.1 <- lm(data=mb_red3, TEAM_FIELDING_DP~.-TEAM_BATTING_2B)
+summary(DP.1)
+
+#remove batting 3B's
+DP.2 <- lm(data=mb_red3, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TEAM_BATTING_3B)
+summary(DP.2)
+
+#remove batting 1B's
+DP.3 <- lm(data=mb_red3, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TEAM_BATTING_3B - TEAM_BATTING_1B)
+summary(DP.3)
+
+#remove all remaining batting
+DP.4 <- lm(data=mb_red3, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TEAM_BATTING_3B - TEAM_BATTING_1B - TEAM_BATTING_HR - TEAM_BATTING_SO - TEAM_BATTING_BB)
+summary(DP.4)
+
+#remove pitching strikeouts
+DP.5 <- lm(data=mb_red3, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TEAM_BATTING_3B - TEAM_BATTING_1B - TEAM_BATTING_HR - TEAM_BATTING_SO - TEAM_BATTING_BB - TEAM_PITCHING_SO)
+summary(DP.5)
+
+
+#all low P value and F statistic of 259.2 with adj R squared of 0.3936
+#take a look
+par(mfrow=c(2,2))
+plot(DP.5)
+plot(DP.5$residuals)
+
+#place back in the data base with imputed data for SB's
+pred.DP <- round(predict(DP.5, mb_red3))
+DP.imp.1 <- impute(mb_red3$TEAM_FIELDING_DP, pred.DP)
+mb_red4 <- mb_red3
+mb_red4$TEAM_FIELDING_DP <- DP.imp.1
+
+#test new data set
+summary(mb_red4)
+```
+
+replace pitching SO & pitching hits & errors outliers with median
+```{r}
+mb_red5 <- mb_red4
+mb_red5$TEAM_PITCHING_SO[which(mb_red5$TEAM_PITCHING_SO >1450)] <- 813
+summary(mb_red5)
+
+#most ever hits by a team is 1730.  So replace all pitching hits >3000 to be conservative with the median
+mb_red6 <- mb_red5
+mb_red6$TEAM_PITCHING_H[which(mb_red6$TEAM_PITCHING_H >3000)] <- 1518
+summary(mb_red6)
+
+#most ever errors by a team is 639 by 1883 Philadelphia.  Prorating to 162 games gives a value of 1046.
+mb_red7 <- mb_red6
+mb_red7$TEAM_FIELDING_E[which(mb_red7$TEAM_FIELDING_E >1046)] <- 159
+summary(mb_red7)
+
+```
+
+#create overall lm
+```{r}
+library(MASS)
+data(cars)
+model <- lm(data=mb_red4, TARGET_WINS +1~.)
+summary(model)
+
+#eliminate pitching walks
+model.1 <- lm(data=mb_red4, TARGET_WINS +1~. - TEAM_PITCHING_BB)
+summary(model.1)
+
+#eliminate pitching SO
+model.2 <- lm(data=mb_red4, TARGET_WINS +1~. - TEAM_PITCHING_BB - TEAM_PITCHING_SO)
+summary(model.2)
+a <- predict (model.2, mb_red4) - 1 
+```
