@@ -58,7 +58,7 @@ plot(BSO.2)
 
 
 #prediction function
-pred.BSO <- round(predict(BSO.3, mb))
+pred.BSO <- round(predict(BSO.4, mb))
 impute <- function (a, a.impute){
   ifelse (is.na(a), a.impute,a)
 }
