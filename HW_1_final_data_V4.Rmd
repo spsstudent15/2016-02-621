@@ -1,0 +1,307 @@
+---
+title: "621 HW 1 v 4"
+author: "Jeff Nieman, Scott Kahr, James Topor, Armenoush"
+date: "June 13, 2016"
+output: html_document
+---
+
+```{r}
+library(car)
+
+#####Creating a new column for batting singles and eliminating hits for batting
+
+mb_e <- read.csv("https://raw.githubusercontent.com/jtopor/CUNY-MSDA-621/master/HW-1/moneyball-training-data.csv")  
+#eliminate index column
+mb_e1 <- mb_e[,-1]
+
+#add singles column for hitting
+mb_e1$TEAM_BATTING_1B <- as.numeric(mb_e1$TEAM_BATTING_H-mb_e1$TEAM_BATTING_2B-mb_e1$TEAM_BATTING_3B-mb_e1$TEAM_BATTING_HR)
+mb_e1 <- mb_e1[,-2]
+mb_e1 <- as.data.frame(mb_e1)
+```
+
+#####Eliminate HBP, CS, and pitching HR's.
+
+```{r}
+mb <- mb_e1[,-c(8,9,11)]
+summary(mb)
+```
+
+
+#####Build model for batting SO using Gelman approach
+```{r}
+
+#take out double plays + pitching SO + SB as data set is incomplete + Wins as they are not present in the evaluation data
+
+BSO.1 <- lm(data=mb, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB -TARGET_WINS)
+summary(BSO.1)
+
+#eliminate doubles
+BSO.2 <- lm(data=mb, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TARGET_WINS -TEAM_BATTING_2B)
+summary(BSO.2)
+vif(BSO.2)
+
+# vif says remove TEAM_PITCHING_BB
+BSO.3 <- lm(data=mb, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TARGET_WINS -TEAM_BATTING_2B - TEAM_PITCHING_BB)
+summary(BSO.3)
+
+# pvals say remove PITCHING_H
+BSO.4 <- lm(data=mb, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TARGET_WINS -TEAM_BATTING_2B - TEAM_PITCHING_BB - TEAM_PITCHING_H)
+summary(BSO.4)
+
+vif(BSO.4)
+
+##All p-values are low with a 686.8 F-statistic and adjusted R squared of 0.7236
+#take a look
+par(mfrow=c(2,2))
+plot(BSO.2)
+
+
+#prediction function
+pred.BSO <- round(predict(BSO.3, mb))
+impute <- function (a, a.impute){
+  ifelse (is.na(a), a.impute,a)
+}
+
+BSO.imp <- impute(mb$TEAM_BATTING_SO, pred.BSO)
+
+###################################################
+# Jims added code for diagnostics of imputation
+
+# first, check summaries to ensure similar values
+summary(mb$TEAM_BATTING_SO)
+summary(BSO.imp)
+
+# now plot side-by-side histograms to check similarity of distributions
+par(mfrow = c(2,2))
+hist(mb$TEAM_BATTING_SO, breaks = 200)
+hist(BSO.imp, breaks = 200)
+###################################################
+
+
+#place back in the data base with imputed data for SO's
+mb1 <- mb
+mb1$TEAM_BATTING_SO <- BSO.imp
+```
+
+
+#Build model for Pitching SO
+
+```{r}
+#take out double plays + SB as data set is incomplete and wins as they are not present in evaluation data
+
+PSO.1 <- lm(data=mb1, TEAM_PITCHING_SO~. -TEAM_FIELDING_DP -TEAM_BASERUN_SB - TARGET_WINS)
+summary(PSO.1)
+
+vif(PSO.1)
+# vif says remove TEAM_PITCHING_BB
+
+PSO.2 <- lm(data=mb1, TEAM_PITCHING_SO~. -TEAM_FIELDING_DP -TEAM_BASERUN_SB - TARGET_WINS - TEAM_PITCHING_BB)
+summary(PSO.2)
+
+vif(PSO.2)
+
+#all low P value and F statistic of 4719 with adj R squared of 0.9952
+#take a look
+par(mfrow=c(2,2))
+plot(PSO.2)
+
+#place back in the data base with imputed data for SO's
+pred.PSO <- round(predict(PSO.2, mb1))
+PSO.imp <- impute(mb1$TEAM_PITCHING_SO, pred.PSO)
+
+###################################################
+# Jims added code for diagnostics of imputation
+
+# first, check summaries to ensure similar values
+summary(mb1$TEAM_PITCHING_SO)
+summary(PSO.imp)
+
+# now plot side-by-side histograms to check similarity of distributions
+par(mfrow = c(2,2))
+hist(mb1$TEAM_PITCHING_SO, breaks = 200)
+hist(PSO.imp, breaks = 200)
+###################################################
+
+mb2 <- mb1
+mb2$TEAM_PITCHING_SO <- PSO.imp
+```
+
+#####Build model for SB
+```{r}
+#Take out DP as incomplete data and target wins
+SB.1 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP - TARGET_WINS)
+summary(SB.1)
+
+#eliminate pitching BB's
+SB.2 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS)
+summary(SB.2)
+
+#eliminate singles
+SB.3 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_1B - TARGET_WINS)
+summary(SB.3)
+
+#simplify the model by taking out pitching
+SB.4 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_1B - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H)
+summary(SB.4)
+
+#add singles back in
+SB.5 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H)
+summary(SB.5)
+
+#eliminate doubles
+SB.6 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H - TEAM_BATTING_2B)
+summary(SB.6)
+
+#eliminate walks
+SB.7 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H - TEAM_BATTING_2B - TEAM_BATTING_BB)
+summary(SB.7)
+
+#all low P value and F statistic of 202.9 with adj R squared of 0.3427
+#take a look
+par(mfrow=c(2,2))
+plot(SB.7)
+
+#place back in the data base with imputed data for SB's
+pred.SB <- round(predict(SB.7, mb2))
+SB.imp <- impute(mb2$TEAM_BASERUN_SB, pred.SB)
+
+###################################################
+# Jims added code for diagnostics of imputation
+
+# first, check summaries to ensure similar values
+summary(mb2$TEAM_BASERUN_SB)
+summary(SB.imp)
+
+# now plot side-by-side histograms to check similarity of distributions
+par(mfrow = c(2,2))
+hist(mb2$TEAM_BASERUN_SB, breaks = 200)
+hist(SB.imp, breaks = 200)
+###################################################
+
+mb3 <- mb2
+mb3$TEAM_BASERUN_SB <- SB.imp
+```
+
+#####Build model to replace DP
+```{r}
+
+#remove target wins
+DP.1 <- lm(data=mb3, TEAM_FIELDING_DP~.-TARGET_WINS)
+summary(DP.1)
+
+#remove batting 2B's
+DP.2 <- lm(data=mb3, TEAM_FIELDING_DP~.-TARGET_WINS - TEAM_BATTING_2B)
+summary(DP.2)
+# results show that EVERYTHING ELSE is statistically signficant, so:
+
+# run vif to check for collinearity
+vif(DP.2)
+# results show TEAM_BATTING_SO should be removed
+
+# remove TEAM_BATTING_SO
+DP.3 <- lm(data=mb3, TEAM_FIELDING_DP~. -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO)
+summary(DP.3)
+# p-value says remove TEAM_PITCHING_SO;
+
+
+# remove TEAM_PITCHING_SO
+DP.4 <- lm(data=mb3, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO)
+summary(DP.4)
+vif(DP.4)
+# P values and vif both indicate remove TEAM_PITCHING_BB
+
+# remove TEAM_PITCHING_BB
+DP.5 <- lm(data=mb3, TEAM_FIELDING_DP~. -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(DP.5)
+vif(DP.5)
+# vif says remove TEAM_FIELDING_E; p-values all < .05 so remove TEAM_FIELDING_E
+
+DP.6 <- lm(data=mb3, TEAM_FIELDING_DP~. -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO - TEAM_PITCHING_BB - TEAM_FIELDING_E)
+summary(DP.6)
+vif(DP.6)
+# now no collinearity but p-values say remove TEAM_PITCHING_H
+
+DP.7 <- lm(data=mb3, TEAM_FIELDING_DP~. -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO - TEAM_PITCHING_BB - TEAM_FIELDING_E - TEAM_PITCHING_H)
+summary(DP.7)
+vif(DP.7)
+# no collinearity, all p-values < .05 so stop
+
+
+#all low P value and F statistic of 255.8 with adj R squared of 0.3904
+#take a look
+par(mfrow=c(2,2))
+plot(DP.7)
+
+
+#place back in the data base with imputed data for SB's
+# NOTE: Changed DP.4 to DP.7 here
+pred.DP <- round(predict(DP.7, mb3))
+DP.imp <- impute(mb3$TEAM_FIELDING_DP, pred.DP)
+
+###################################################
+# Jims added code for diagnostics of imputation
+
+# first, check summaries to ensure similar values
+summary(mb3$TEAM_FIELDING_DP)
+summary(DP.imp)
+
+# now plot side-by-side histograms to check similarity of distributions
+par(mfrow = c(2,2))
+hist(mb3$TEAM_FIELDING_DP, breaks = 200)
+hist(DP.imp, breaks = 200)
+###################################################
+
+mb4 <- mb3
+mb4$TEAM_FIELDING_DP <- DP.imp
+```
+
+
+#####Eliminate unhistorical outliers
+
+```{r}
+
+# check rowcount before removal of outliers
+nrow(mb4)
+
+############## TEAM PITCHING_SO ############################
+#most pitching SO's is 1450.  So delete all records with more than 1450 pitching SO's
+mb5 <- mb4
+
+# fixed error in this line: dataframe in 'which' call was mb1 so changed to mb5
+mb5 <- mb5[which(mb5$TEAM_PITCHING_SO < 1450),]
+summary(mb5)
+
+# check rowcount
+nrow(mb5)
+
+############ TEAM_PITCHING_H ##############################
+#most ever hits by a team is 1730.  So delete all pitching hits >3000 to be conservative with the median
+mb6 <- mb5
+mb6 <- mb6[which(mb6$TEAM_PITCHING_H < 3001),]
+summary(mb6)
+
+# check rowcount
+nrow(mb6)
+
+############ TEAM_FIELDING_E ##############################
+#most ever errors by a team is 639 by 1883 Philadelphia.  Prorating to 162 games gives a value of 1046.
+mb7 <- mb6
+mb7 <- mb7[which(mb7$TEAM_FIELDING_E < 1047),]
+summary(mb7)
+
+# check rowcount: result is 2172 => removed total of 104 rows
+nrow(mb7)
+
+dim(mb)-dim(mb7)
+
+#we removed 104 rows total due to outliers.
+
+# now renumber rows of dataframe so that there are no gaps in row numbers
+rownames(mb7) <- 1:nrow(mb7)
+
+
+# create CSV file containing updated data set
+write.csv(mb7, file = "C:/SQLData/621-HW1-Clean-Data.csv", row.names = FALSE, col.names = TRUE)
+```
+
