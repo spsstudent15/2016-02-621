@@ -159,6 +159,7 @@ $(document).ready(function () {
 </ul></li>
 <li><a href="#part-2.-data-preparation">Part 2. Data Preparation</a><ul>
 <li><a href="#prompt">Prompt</a></li>
+<li><a href="#notes">Notes</a></li>
 <li><a href="#addressing-outliers-via-historical-data">Addressing Outliers via Historical Data</a></li>
 <li><a href="#addressing-outliers-via-cooks-distance">Addressing Outliers via Cook’s Distance</a></li>
 <li><a href="#combining-variables-and-creating-new-variables">Combining Variables and Creating New Variables</a></li>
@@ -181,6 +182,7 @@ $(document).ready(function () {
 <h1>Part 1. Data Exploration</h1>
 <div id="data-summary" class="section level2">
 <h2>Data Summary</h2>
+<p>The data base originally sent out has 17 attributes with 2277 lines.</p>
 <p>Describe the size and the variables in the moneyball training data set. Mean / Standard Deviation / Median</p>
 </div>
 <div id="data-plots" class="section level2">
@@ -193,7 +195,21 @@ $(document).ready(function () {
 </div>
 <div id="missing-and-invalid-data" class="section level2">
 <h2>Missing and Invalid Data</h2>
-<p>Are any of the variables missing and need to be imputed “fixed”?</p>
+<p>We began by creating a new attribute for singles, taking the hits value and subtracting out the doubles, triples and home runs. Then we eliminated the batting hits column. We believe that separating out singles with the other unique hit values will minimize collinearity.</p>
+<p>We began by excluding 4 data attributes for the models:</p>
+<ol style="list-style-type: decimal">
+<li><p>Hit by Pitch: In the case of hit by pitch there were very few values present (2085 missing). Based on SME knowledge from actual coaches we discovered that hit by pitches rarely impact wins. Therefore, we chose to exclude it.</p></li>
+<li><p>Caught stealing: In the case of caught stealing there were many missing values as well (772). This attribute was found to be highly collinear with the stolen base attribute (because teams that steal a lot of bases will have more caught stealing). As a result, we chose to exclude this value and kept the positive value of stolen bases which had fewer missing components.</p></li>
+<li><p>Pitching Home Runs Allowed: These data were also found to be highly collinear with Batting Homeruns (because the years of “juicing” tended to have a lot of homeruns hit and therefore pitched, while the “dead ball years” had very few hit and allowed). We chose to exclude this attribute and kept the home runs batting value</p></li>
+<li><p>Index: These numbers were simply sorting keys and offer no real statistical value to the model and were therefore excluded.</p></li>
+</ol>
+<p>We then worked on filling in the remaining missing data. To do this we used a linear regression approach recommended by Faraway (p.???) and Fox (p.???). We decided against the mean and median as the regression approach will fill in with better variance. We filled the following fields:</p>
+<ol style="list-style-type: decimal">
+<li><p>Batting strikeouts: The adjusted R squared value for our regression was 0.7223 and the data appeared normal. We created a function that allowed us to only replace the missing values.Here we replaced 102 values.</p></li>
+<li><p>Pitching strikeouts: We achieved a really good approach here as the adjusted R squared value was 0.9952. Here again we replaced the same 102 values</p></li>
+<li><p>Stolen Bases: The model here was not quite as strong with an adjusted R squared value of 0.3427. Here we replaced 131 values.</p></li>
+<li><p>Double Plays: The model here had an adjusted R squared value of 0.3904. Here we replaced 286 missing values. We completed this phase for the master data source by eliminating some clear outliers. The record for the most pitching strikeouts is 1450 by the 2014 Cleveland Indians. Therefore we know that everything above that point is an aberration, so we ignored all lines with a strikeout total above 1450. Similarly, the most errors by team was 639 by Philadelphia in 1883. Prorated to 162 games we ignored all rows with errors above 1046. The most ever hits by a team was 1730. To allow for any margin of error when translated to pitching we ignored all pitching hits allowed above 3000. This approach removed 104 rows and the data had a much more normal distribution for these values. For our individual models we did look at combining certain fields or creating some unique attributes from the data fields provided. We also looked at power transformations as well. These model-based transformations will be covered in the individual model section.</p></li>
+</ol>
 </div>
 </div>
 <div id="part-2.-data-preparation" class="section level1">
@@ -202,6 +218,10 @@ $(document).ready(function () {
 <h2>Prompt</h2>
 <p>Describe how you have transformed the data by changing the original variables or creating new variables. If you did transform the data or create new variables, discuss why you did this. Here are some possible transformations:</p>
 <p>Fix missing values (maybe with a Mean or Median value) Create flags to suggest if a variable was missing Transform data by putting it into buckets Mathematical transforms such as log or square root (or use Box-Cox) Combine variables (such as ratios or adding or multiplying) to create new variables</p>
+</div>
+<div id="notes" class="section level2">
+<h2>Notes</h2>
+<p>are we introducing outliers through imputation? 4 variables have significant NA variables and need to be addressed [chart of NA percentage] concerns about linearity linear model introduced the fewest problems compared to other options linear model fits the data to the existing distribution of the variable is it valid to replace the outliers or should we ignore them? good leverage points - fictitious data or outside norm but still fit on line bad leverage points - pulling data if beyond 2 SDs using cook’s distance test, then remove how many instances are we replacing - 3000 delete about 100 lines out of 2200 3 variables with very skewed data</p>
 </div>
 <div id="addressing-outliers-via-historical-data" class="section level2">
 <h2>Addressing Outliers via Historical Data</h2>

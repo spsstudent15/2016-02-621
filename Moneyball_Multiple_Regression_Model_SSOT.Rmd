@@ -4,6 +4,7 @@ output:
   html_document:
     highlight: pygments
     keep_md: yes
+    
     theme: cerulean
     toc: yes
   pdf_document: default
