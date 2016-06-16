@@ -7,24 +7,46 @@ output: html_document
 
 ```{r}
 library(car)
+```
 
-#####Creating a new column for batting singles and eliminating hits for batting
+```{r}
 
-mb_e <- read.csv("https://raw.githubusercontent.com/jtopor/CUNY-MSDA-621/master/HW-1/moneyball-training-data.csv")  
+# read EVALUATION data set
+eval_data <- read.csv("https://raw.githubusercontent.com/jtopor/CUNY-MSDA-621/master/HW-1/moneyball-evaluation-data.csv")
+
+#eliminate index column
+eval_data <- eval_data[,-1]
+
+# read training data set
+mb_e <- read.csv("https://raw.githubusercontent.com/jtopor/CUNY-MSDA-621/master/HW-1/moneyball-training-data.csv")
+
 #eliminate index column
 mb_e1 <- mb_e[,-1]
+
+#####Creating a new column for batting singles and eliminating hits for batting
 
 #add singles column for hitting
 mb_e1$TEAM_BATTING_1B <- as.numeric(mb_e1$TEAM_BATTING_H-mb_e1$TEAM_BATTING_2B-mb_e1$TEAM_BATTING_3B-mb_e1$TEAM_BATTING_HR)
 mb_e1 <- mb_e1[,-2]
 mb_e1 <- as.data.frame(mb_e1)
+
+eval_data$TEAM_BATTING_1B <- as.numeric(eval_data$TEAM_BATTING_H - eval_data$TEAM_BATTING_2B - eval_data$TEAM_BATTING_3B - eval_data$TEAM_BATTING_HR)
+
+# HITS is in first column in eval data
+eval_data <- eval_data[,-1]
+
+# ADD A DUMMY COLUMN TO EVAL DATA FOR TARGET WINS
+eval_data$TARGET_WINS <- 0
 ```
 
 #####Eliminate HBP, CS, and pitching HR's.
 
 ```{r}
 mb <- mb_e1[,-c(8,9,11)]
-summary(mb)
+# summary(mb)
+
+eval_data <- eval_data[,-c(7,8,10)]
+# summary(eval_data)
 ```
 
 
@@ -56,14 +78,20 @@ vif(BSO.4)
 par(mfrow=c(2,2))
 plot(BSO.2)
 
-
-#prediction function
-pred.BSO <- round(predict(BSO.4, mb))
+# ---------------------------------------
+# function definition for impute function
 impute <- function (a, a.impute){
   ifelse (is.na(a), a.impute,a)
 }
+# ---------------------------------------
 
+#prediction function
+pred.BSO <- round(predict(BSO.4, mb))
 BSO.imp <- impute(mb$TEAM_BATTING_SO, pred.BSO)
+
+# impute the evaluation data
+pred_eval.BSO <- round(predict(BSO.4, eval_data))
+eval.BSO.imp <- impute(eval_data$TEAM_BATTING_SO, pred_eval.BSO)
 
 ###################################################
 # Jims added code for diagnostics of imputation
@@ -76,12 +104,25 @@ summary(BSO.imp)
 par(mfrow = c(2,2))
 hist(mb$TEAM_BATTING_SO, breaks = 200)
 hist(BSO.imp, breaks = 200)
+
+# ------------------ eval data checks ------------------------
+# first, check summaries to ensure similar values
+summary(eval_data$TEAM_BATTING_SO)
+summary(eval.BSO.imp)
+
+# now plot side-by-side histograms to check similarity of distributions
+par(mfrow = c(2,2))
+hist(eval_data$TEAM_BATTING_SO, breaks = 30)
+hist(eval.BSO.imp, breaks = 30)
 ###################################################
 
-
-#place back in the data base with imputed data for SO's
+# update dataframes with imputed values
 mb1 <- mb
 mb1$TEAM_BATTING_SO <- BSO.imp
+
+eval_data.1 <- eval_data
+eval_data.1$TEAM_BATTING_SO <- eval.BSO.imp
+
 ```
 
 
@@ -110,6 +151,10 @@ plot(PSO.2)
 pred.PSO <- round(predict(PSO.2, mb1))
 PSO.imp <- impute(mb1$TEAM_PITCHING_SO, pred.PSO)
 
+# impute the evaluation data
+pred_eval.PSO <- round(predict(PSO.2, eval_data.1))
+eval.PSO.imp <- impute(eval_data.1$TEAM_PITCHING_SO, pred_eval.PSO)
+
 ###################################################
 # Jims added code for diagnostics of imputation
 
@@ -121,10 +166,26 @@ summary(PSO.imp)
 par(mfrow = c(2,2))
 hist(mb1$TEAM_PITCHING_SO, breaks = 200)
 hist(PSO.imp, breaks = 200)
+
+# ------------------ eval data checks ------------------------
+# first, check summaries to ensure similar values
+summary(eval_data.1$TEAM_PITCHING_SO)
+summary(eval.PSO.imp)
+
+# now plot side-by-side histograms to check similarity of distributions
+par(mfrow = c(2,2))
+hist(eval_data.1$TEAM_PITCHING_SO, breaks = 30)
+hist(eval.PSO.imp, breaks = 30)
+
 ###################################################
+
+# update dataframes with imputed values 
 
 mb2 <- mb1
 mb2$TEAM_PITCHING_SO <- PSO.imp
+
+eval_data.2 <- eval_data.1
+eval_data.2$TEAM_PITCHING_SO <- eval.PSO.imp
 ```
 
 #####Build model for SB
@@ -166,6 +227,10 @@ plot(SB.7)
 pred.SB <- round(predict(SB.7, mb2))
 SB.imp <- impute(mb2$TEAM_BASERUN_SB, pred.SB)
 
+# impute the evaluation data
+pred_eval.SB <- round(predict(SB.7, eval_data.2))
+eval.SB.imp <- impute(eval_data.2$TEAM_BASERUN_SB, pred_eval.SB)
+
 ###################################################
 # Jims added code for diagnostics of imputation
 
@@ -177,10 +242,24 @@ summary(SB.imp)
 par(mfrow = c(2,2))
 hist(mb2$TEAM_BASERUN_SB, breaks = 200)
 hist(SB.imp, breaks = 200)
+
+# ------------------ eval data checks ------------------------
+# first, check summaries to ensure similar values
+summary(eval_data.2$TEAM_BASERUN_SB)
+summary(eval.SB.imp)
+
+# now plot side-by-side histograms to check similarity of distributions
+par(mfrow = c(2,2))
+hist(eval_data.2$TEAM_BASERUN_SB, breaks = 30)
+hist(eval.SB.imp, breaks = 30)
 ###################################################
 
+# update dataframes with imputed values
 mb3 <- mb2
 mb3$TEAM_BASERUN_SB <- SB.imp
+
+eval_data.3 <- eval_data.2
+eval_data.3$TEAM_BASERUN_SB <- eval.SB.imp
 ```
 
 #####Build model to replace DP
@@ -239,6 +318,10 @@ plot(DP.7)
 pred.DP <- round(predict(DP.7, mb3))
 DP.imp <- impute(mb3$TEAM_FIELDING_DP, pred.DP)
 
+# impute the evaluation data
+pred_eval.DP <- round(predict(DP.7, eval_data.3))
+eval.DP.imp <- impute(eval_data.3$TEAM_FIELDING_DP, pred_eval.DP)
+
 ###################################################
 # Jims added code for diagnostics of imputation
 
@@ -250,19 +333,34 @@ summary(DP.imp)
 par(mfrow = c(2,2))
 hist(mb3$TEAM_FIELDING_DP, breaks = 200)
 hist(DP.imp, breaks = 200)
+
+# ------------------ eval data checks ------------------------
+# first, check summaries to ensure similar values
+summary(eval_data.3$TEAM_FIELDING_DP)
+summary(eval.DP.imp)
+
+# now plot side-by-side histograms to check similarity of distributions
+par(mfrow = c(2,2))
+hist(eval_data.3$TEAM_FIELDING_DP, breaks = 30)
+hist(eval.DP.imp, breaks = 30)
 ###################################################
 
+# update data frames with imputed values
 mb4 <- mb3
 mb4$TEAM_FIELDING_DP <- DP.imp
+
+eval_data.4 <- eval_data.3
+eval_data.4$TEAM_FIELDING_DP <- eval.DP.imp
 ```
 
 
-#####Eliminate unhistorical outliers
+#####Eliminate unhistorical outliers - DO THIS FOR THE EVAL DATA AS WELL
 
 ```{r}
 
 # check rowcount before removal of outliers
 nrow(mb4)
+nrow(eval_data.4)
 
 ############## TEAM PITCHING_SO ############################
 #most pitching SO's is 1450.  So delete all records with more than 1450 pitching SO's
@@ -270,38 +368,54 @@ mb5 <- mb4
 
 # fixed error in this line: dataframe in 'which' call was mb1 so changed to mb5
 mb5 <- mb5[which(mb5$TEAM_PITCHING_SO < 1450),]
-summary(mb5)
+
+eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_SO < 1450),]
 
 # check rowcount
 nrow(mb5)
+nrow(eval_data.4)
 
 ############ TEAM_PITCHING_H ##############################
 #most ever hits by a team is 1730.  So delete all pitching hits >3000 to be conservative with the median
 mb6 <- mb5
 mb6 <- mb6[which(mb6$TEAM_PITCHING_H < 3001),]
-summary(mb6)
+
+eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_H < 3001),]
 
 # check rowcount
 nrow(mb6)
+nrow(eval_data.4)
 
 ############ TEAM_FIELDING_E ##############################
 #most ever errors by a team is 639 by 1883 Philadelphia.  Prorating to 162 games gives a value of 1046.
 mb7 <- mb6
 mb7 <- mb7[which(mb7$TEAM_FIELDING_E < 1047),]
-summary(mb7)
+
+eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_FIELDING_E < 1047),]
+
+# ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 # check rowcount: result is 2172 => removed total of 104 rows
 nrow(mb7)
+nrow(eval_data.4)
 
 dim(mb)-dim(mb7)
 
-#we removed 104 rows total due to outliers.
+#we removed 104 rows total due to outliers in TRAINING data set.
+
+# we removed 11 rows from the EVALUATION data set
 
 # now renumber rows of dataframe so that there are no gaps in row numbers
 rownames(mb7) <- 1:nrow(mb7)
+rownames(eval_data.4) <- 1:nrow(eval_data.4)
 
+# now drop dummy column from training data
+eval_data.4 <- eval_data.4[,-13]
 
-# create CSV file containing updated data set
+# create CSV files containing updated data sets
 write.csv(mb7, file = "C:/SQLData/621-HW1-Clean-Data.csv", row.names = FALSE, col.names = TRUE)
+
+write.csv(eval_data.4, file = "C:/SQLData/621-HW1-Clean-EvalData-.csv", row.names = FALSE, col.names = TRUE)
 ```
 
