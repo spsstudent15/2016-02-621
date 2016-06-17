@@ -251,7 +251,7 @@ TARGET_WINS = 52.88  + (0.168 * TEAM_BATTING_3B)
                      + (3252.31 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)   
                      - (0.102 * TEAM_FIELDING_DP)  
 
-RSE =       11.86  on 2153 deg. of freedom  
+RSE =       11.86  on 2153 deg. of freedom   
 R^2 =       0.3168  
 Adj. R^2 =  0.3143  
 F Stat. =   124.8  
@@ -276,24 +276,24 @@ Inclusion of this new variable allows us to eliminate the four component variabl
 
 This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
 
-- TEAM_TOTAL_BASES (derived variable)
-- TEAM_BATTING_BB
-- TEAM_BATTING_SO
-- TEAM_BASERUN_SB
-- TEAM_PITCHING_H
-- TEAM_PITCHING_BB
-- TEAM_PITCHING_SO
-- TEAM_FIELDING_E
-- TEAM_FIELDING_DP
+- TEAM_TOTAL_BASES (derived variable)  
+- TEAM_BATTING_BB  
+- TEAM_BATTING_SO  
+- TEAM_BASERUN_SB  
+- TEAM_PITCHING_H  
+- TEAM_PITCHING_BB  
+- TEAM_PITCHING_SO  
+- TEAM_FIELDING_E  
+- TEAM_FIELDING_DP  
 
 Three iterations of p-value / VIF bacward selection removed TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
 
-TARGET_WINS = 48.486 + (0.022 * TEAM_BATTING_BB)  
-                     - (0.015 * TEAM_BATTING_SO)  
+TARGET_WINS = 48.486 + (0.022 * TEAM_BATTING_BB)    
+                     - (0.015 * TEAM_BATTING_SO)   
                      + (0.063 * TEAM_BASERUN_SB)  
                      + (0.010 * TEAM_PITCHING_H)  
                      - (0.064 * TEAM_FIELDING_E)  
-                     - (0.117 * TEAM_FIELDING_DP)  
+                     - (0.117 * TEAM_FIELDING_DP)   
                      + (0.018 * TOTAL_BASES)  
 
 RSE =       11.7  on 2154 deg. of freedom  
@@ -308,12 +308,12 @@ The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recomm
 
 Therefore, this model appears to be an improvement over the first TOTAL_BASES model when the residual plots are considered. The characteristic equation indicated by the model is as follows:
 
-TARGET_WINS = 39.164 + (0.025 * TEAM_BATTING_BB) 
-                     - (0.025 * TEAM_BATTING_SO) 
-                     + (0.038 * TEAM_BASERUN_SB) 
+TARGET_WINS = 39.164 + (0.025 * TEAM_BATTING_BB)  
+                     - (0.025 * TEAM_BATTING_SO)  
+                     + (0.038 * TEAM_BASERUN_SB)  
                      + (2714.54 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)  
-                     - (0.115 * TEAM_FIELDING_DP)
-                     + (0.0197 * TOTAL_BASES)
+                     - (0.115 * TEAM_FIELDING_DP)  
+                     + (0.0197 * TOTAL_BASES)  
                      
 RSE =       11.97  on 2155 deg. of freedom  
 R^2 =       0.3048  
@@ -338,26 +338,26 @@ Inclusion of this new variable allows us to eliminate the two additional compone
 
 This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
 
-- TB_PLUS (derived variable)
-- TEAM_BATTING_SO
-- TEAM_PITCHING_H
-- TEAM_PITCHING_BB
-- TEAM_PITCHING_SO
-- TEAM_FIELDING_E
-- TEAM_FIELDING_DP
+- TB_PLUS (derived variable)  
+- TEAM_BATTING_SO  
+- TEAM_PITCHING_H  
+- TEAM_PITCHING_BB  
+- TEAM_PITCHING_SO  
+- TEAM_FIELDING_E  
+- TEAM_FIELDING_DP  
 
 Four iterations of p-value / VIF bacward selection removed TEAM_PITCHING_H, TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
 
-TARGET_WINS = 52.330 - (0.016 * TEAM_BATTING_SO)  
-                     - (0.034 * TEAM_FIELDING_E)  
-                     - (0.154 * TEAM_FIELDING_DP)  
+TARGET_WINS = 52.330 - (0.016 * TEAM_BATTING_SO)   
+                     - (0.034 * TEAM_FIELDING_E)   
+                     - (0.154 * TEAM_FIELDING_DP)   
                      + (0.025 * TB_PLUS)  
 
 RSE =       12.12  on 2162 deg. of freedom  
 R^2 =       0.2944   
 Adj. R^2 =  0.2931   
 F Stat. =   225.5  
-MSE =       145
+MSE =       145  
 
 As with the "General Model" and the "Total Bases" model, the diagnostic plots showed a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for the variables TEAM_BATTING_SO and TEAM_FIELDING_E.
 
@@ -365,10 +365,10 @@ The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recomm
 
 Therefore, this model appears to be an improvement over the first TB_PLUS model when the residual plots are considered. Furthermore, the number of predictor variables used here is two fewer than that of the "Total Bases" model discussed earlier. The characteristic equation indicated by the model is as follows:
 
-TARGET_WINS = 42.160 - (0.023 * TEAM_BATTING_SO) 
-                     + (2366.82 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)  
-                     - (0.140 * TEAM_FIELDING_DP)
-                     + (0.022 * TB_PLUS)
+TARGET_WINS = 42.160 - (0.023 * TEAM_BATTING_SO)  
+                     + (2366.82 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)   
+                     - (0.140 * TEAM_FIELDING_DP)  
+                     + (0.022 * TB_PLUS)  
                      
 RSE =       12.13  on 2162 deg. of freedom  
 R^2 =       0.2932  
