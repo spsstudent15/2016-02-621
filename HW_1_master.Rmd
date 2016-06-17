@@ -1,9 +1,21 @@
 ---
-title: "master doc 621 HW 1 v 1"
-author: "Jeff Nieman, Scott Karr, James Topor, Armenoush"
+title: "Moneyball Multiple Regression Model"
+author: "Jeff Nieman, Scott Karr, James Topor, Armenoush Aslanian-Persico"
 date: "June 13, 2016"
 output: pdf_document
 ---
+```{r, eval=FALSE, echo=FALSE}
+Change Log:
+
+initials      datetime        change
+----------------------------------------------
+SMK           7.17 7:00pm     Initial Creation
+              7.17 7:45pm     Posted
+----------------------------------------------
+```
+
+#Executive Summary
+#<body>
 
 ```{r load-libaries, eval=TRUE, include=FALSE}
 library(alr3)
@@ -13,6 +25,12 @@ library(fBasics)
 library(knitr)
 library(MASS)
 ```
+
+#Data Dictionary
+#<body>
+
+#Data Imputation
+#<body>
 
 ```{r, eval=TRUE, include=FALSE}
 
@@ -51,7 +69,6 @@ mb <- mb_e1[,-c(9,10,12)]
 eval_data <- eval_data[,-c(8,9,11)]
 # summary(eval_data)
 ```
-
 
 #####Build model for batting SO using Gelman approach
 ```{r, eval=TRUE, include=FALSE}
@@ -129,7 +146,7 @@ eval_data.1$TEAM_BATTING_SO <- eval.BSO.imp
 ```
 
 
-#Build model for Pitching SO
+#####Build model for Pitching SO
 
 ```{r, eval=TRUE, include=FALSE}
 #take out double plays + SB as data set is incomplete and wins as they are not present in evaluation data
@@ -426,4 +443,32 @@ rownames(eval_data.4) <- 1:nrow(eval_data.4)
 
 #write.csv(eval_data.4, file = "C:/SQLData/621-HW1-Clean-EvalData-.csv", row.names = FALSE, col.names = TRUE)
 ```
+#Model Selection
 
+#####Model candidate 1
+<Approach>
+<Code & Analysis> 
+<Summary>
+
+#####Model candidate 2
+<Approach>
+<Code & Analysis>
+<Summary>
+
+#####Model candidate 3
+<Approach>
+<Code & Analysis>
+<Summary>
+
+#####Model best fit
+<Approach>
+<Code & Analysis>
+<Summary>
+
+######Prediction Model  
+<Why we chose model>
+<Code predict function>
+<Evaluate output>
+
+#Conclusion
+<body>
