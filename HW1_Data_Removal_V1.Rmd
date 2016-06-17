@@ -1,0 +1,49 @@
+---
+title: "MLB Initial Data Removal Suggestions"
+author: "James Topor"
+date: "June 12, 2016"
+output: html_document
+---
+```{r}
+# CODE SEGMENT FOR ANALYZING SB's, CS, HR, and Pitched HR's
+
+mb_e <- read.csv("https://raw.githubusercontent.com/jtopor/CUNY-MSDA-621/master/HW-1/moneyball-training-data.csv")  
+
+par(mfrow=c(1,1))
+# --------------------------------------------------------- 
+# check correlation of CS with SB =>
+# variables are 65.5% correlated
+cor(mb_e$TEAM_BASERUN_CS, mb_e$TEAM_BASERUN_SB, use = "complete.obs")
+
+# plot sb vs cs
+msteal <- lm(mb_e$TEAM_BASERUN_CS ~ mb_e$TEAM_BASERUN_SB)
+summary(msteal)
+
+plot(mb_e$TEAM_BASERUN_CS ~ mb_e$TEAM_BASERUN_SB)
+abline(msteal)
+
+# -----------------------------------------------------------
+# check correlation of hit HR and pitched HR
+# variables are 97% correlated
+cor(mb_e$TEAM_BATTING_HR, mb_e$TEAM_PITCHING_HR, use = "complete.obs")
+
+mhr <- lm(mb_e$TEAM_BATTING_HR ~ mb_e$TEAM_PITCHING_HR)
+summary(mhr)
+
+# plot relationship betw HR and pitched HR
+plot(mb_e$TEAM_BATTING_HR ~ mb_e$TEAM_PITCHING_HR)
+abline(mhr)
+
+# how many cases have identical values for battingHR and pitchingHR?
+# answer is 815 out of 2276 = 36% !!!
+sum(mb_e$TEAM_BATTING_HR == mb_e$TEAM_PITCHING_HR)
+
+
+# now run a model without INDEX, HBP, CS, Pitched HR:
+# create new data frame without unneeded elements from original CSV
+mb_mods <- mb_e[,c(2,3,4,5,6,7,8,9,12,14,15,16,17)]
+
+# fit a model
+mb_m1 <- lm(TARGET_WINS ~ ., data = mb_mods)
+summary(mb_m1)
+```

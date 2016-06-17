@@ -1,0 +1,124 @@
+---
+title: "Data 621 HW1"
+author: "Jeff Nieman"
+date: "June 9, 2016"
+output: html_document
+---
+#####Creating a new column for batting singles and eliminating hits for batting
+```{r}
+mb_e <- read.csv("C:/Users/jenieman/Documents/CUNY/Data 621/moneyball-training-data.csv")  
+#eliminate index column
+mb_e1 <- mb_e[,-1]
+
+#add singles column for hitting
+mb_e1$TEAM_BATTING_1B <- as.numeric(mb_e1$TEAM_BATTING_H-mb_e1$TEAM_BATTING_2B-mb_e1$TEAM_BATTING_3B-mb_e1$TEAM_BATTING_HR)
+mb_e1 <- mb_e1[,-2]
+mb_e1 <- as.data.frame(mb_e1)
+```
+
+#####Building a regression model and filling in NA's for SB.  
+Note:  This approach is suggested in LMAR p. 201.  "A more sophisticated alternative to mean imputation is to use regression methods to predict the missing values of the covariates."
+```{r}
+SB <- lm(data=mb_e1, TEAM_BASERUN_SB~.)
+summary(SB)
+
+#eliminate CS as there are no blank SB's with a value for CS + eliminate pitching, wins and fielding variables
+SB1 <- lm(data=mb_e1, TEAM_BASERUN_SB~TEAM_BATTING_1B + TEAM_BATTING_2B + TEAM_BATTING_3B + TEAM_BATTING_HR + TEAM_BATTING_BB)
+summary(SB1)
+
+#eliminate singles
+SB2 <- lm(data=mb_e1, TEAM_BASERUN_SB~TEAM_BATTING_2B + TEAM_BATTING_3B + TEAM_BATTING_HR + TEAM_BATTING_BB)
+summary(SB2)
+
+#fill in NA for SB
+mb_e2 <- mb_e1
+mb_e2$TEAM_BASERUN_SB[is.na(mb_e2$TEAM_BASERUN_SB)]<-round(79.36805-0.19419*mb_e2$TEAM_BATTING_2B+1.41686*mb_e2$TEAM_BATTING_3B-0.24513*mb_e2$TEAM_BATTING_HR+0.08060*mb_e2$TEAM_BATTING_BB)
+```
+
+#####Building a linear regression model and filling in NA's for CS
+```{r}
+CS <- lm(data=mb_e2, TEAM_BASERUN_CS~.)
+summary(CS)
+
+#eliminate wins, pitching and fielding 
+CS1 <- lm(data=mb_e2, TEAM_BASERUN_CS~TEAM_BASERUN_SB +TEAM_BATTING_1B +TEAM_BATTING_2B + TEAM_BATTING_3B +TEAM_BATTING_BB + TEAM_BATTING_HR)
+summary(CS1)
+
+#eliminate walks
+CS2 <- lm(data=mb_e2, TEAM_BASERUN_CS~TEAM_BASERUN_SB +TEAM_BATTING_2B + TEAM_BATTING_3B +TEAM_BATTING_1B + TEAM_BATTING_HR)
+summary(CS2)
+
+#fill in NA for CS
+mb_e3 <- mb_e2
+mb_e3$TEAM_BASERUN_CS[is.na(mb_e3$TEAM_BASERUN_CS)]<-round(49.356793+0.322543*mb_e3$TEAM_BASERUN_SB-0.044486*mb_e3$TEAM_BATTING_2B+0.281124*mb_e3$TEAM_BATTING_3B-0.10797*mb_e3$TEAM_BATTING_HR-0.014034*mb_e3$TEAM_BATTING_1B)
+
+```
+
+#####Building a regression model and filling in NA's for batting SO's
+```{r}
+BSO <- lm(data=mb_e3, TEAM_BATTING_SO~.)
+summary(BSO)
+
+#eliminate fielding and wins and baserunning and HBP and pitching SO's as it contains similar blanks
+BSO1 <- lm(data=mb_e3, TEAM_BATTING_SO~TEAM_BATTING_1B + TEAM_BATTING_2B + TEAM_BATTING_3B + TEAM_BATTING_HR + TEAM_BATTING_BB + TEAM_PITCHING_H + TEAM_PITCHING_BB + TEAM_PITCHING_HR)
+summary(BSO1)
+
+#eliminate pitching HR's
+BSO2 <- lm(data=mb_e3, TEAM_BATTING_SO~TEAM_BATTING_1B + TEAM_BATTING_2B + TEAM_BATTING_3B + TEAM_BATTING_BB + TEAM_PITCHING_H  + TEAM_PITCHING_BB + TEAM_BATTING_HR)
+summary(BSO2)
+
+#fill in NA for batting SO
+mb_e4 <- mb_e3
+mb_e4$TEAM_BATTING_SO[is.na(mb_e4$TEAM_BATTING_SO)]<-round(1605-0.8434*mb_e4$TEAM_BATTING_1B+0.2832*mb_e4$TEAM_BATTING_2B-1.348*mb_e4$TEAM_BATTING_3B-0.3493*mb_e4$TEAM_BATTING_BB-0.02903*mb_e4$TEAM_PITCHING_H+0.1657*mb_e4$TEAM_PITCHING_BB+1.703*mb_e$TEAM_BATTING_HR)
+
+```
+
+#####Building a regression model and filling in NA's for pitching SO's
+```{r}
+PSO <- lm(data=mb_e4, TEAM_PITCHING_SO~.)
+summary(PSO)
+
+#eliminate wins, fielding, baserunning and HBP
+PSO1 <- lm(data=mb_e4, TEAM_PITCHING_SO~TEAM_BATTING_1B + TEAM_BATTING_2B + TEAM_BATTING_3B + TEAM_BATTING_HR + TEAM_BATTING_BB + TEAM_PITCHING_H + TEAM_BATTING_SO + TEAM_PITCHING_BB + TEAM_PITCHING_HR)
+summary(PSO1)
+
+#eliminate batting 3B's
+PSO2 <- lm(data=mb_e4, TEAM_PITCHING_SO~TEAM_BATTING_1B + TEAM_BATTING_2B + TEAM_BATTING_HR + TEAM_BATTING_BB + TEAM_PITCHING_H + TEAM_BATTING_SO + TEAM_PITCHING_BB + TEAM_PITCHING_HR)
+summary(PSO2)
+
+#replace NA with values for pitching SO
+mb_e5 <- mb_e4
+mb_e5$TEAM_PITCHING_SO[is.na(mb_e5$TEAM_PITCHING_SO)]<-round(4422.87422-0.46455*mb_e5$TEAM_BATTING_1B + 0.72823*mb_e5$TEAM_BATTING_2B +8.06941*mb_e5$TEAM_BATTING_HR -3.45005*mb_e5$TEAM_BATTING_BB-0.01815*mb_e5$TEAM_PITCHING_H+1.20501*mb_e5$TEAM_BATTING_SO+3.03598*mb_e5$TEAM_PITCHING_BB-8.40807*mb_e$TEAM_PITCHING_HR)
+
+```
+
+#####Building a linear regression and filling in NA's for DP
+```{r}
+
+
+#build a regression model for DP's
+
+DP <- lm(data=mb_e5, TEAM_FIELDING_DP~.)
+summary(DP)
+
+#eliminate wins, hitting, HBP
+
+DP1 <- lm(data=mb_e5, TEAM_FIELDING_DP~ TEAM_BASERUN_SB+TEAM_BASERUN_CS+TEAM_PITCHING_H+TEAM_PITCHING_HR+TEAM_PITCHING_BB+TEAM_PITCHING_SO+TEAM_FIELDING_E)
+summary(DP1)
+
+#eliminate pitching hits allowed
+DP2 <- lm(data=mb_e5, TEAM_FIELDING_DP~ TEAM_BASERUN_SB+TEAM_BASERUN_CS+TEAM_PITCHING_HR+TEAM_PITCHING_BB+TEAM_PITCHING_SO+TEAM_FIELDING_E)
+summary(DP2)
+
+#eliminate CS as it makes no sense
+DP3 <- lm(data=mb_e5, TEAM_FIELDING_DP~ TEAM_BASERUN_SB+TEAM_PITCHING_HR+TEAM_PITCHING_BB+TEAM_PITCHING_SO+TEAM_FIELDING_E)
+summary(DP3)
+
+#replace NA with values for DP
+mb_e6 <- mb_e5
+mb_e6$TEAM_FIELDING_DP[is.na(mb_e6$TEAM_FIELDING_DP)]<- round(158.8-0.1235*mb_e6$TEAM_BASERUN_SB +0.03320*mb_e6$TEAM_PITCHING_HR+0.02815*mb_e6$TEAM_PITCHING_BB - 0.006109*mb_e6$TEAM_PITCHING_SO - 0.06573*mb_e6$TEAM_FIELDING_E)
+
+summary(mb_e6)
+#only NA's left are HBP
+
+
