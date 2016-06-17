@@ -14,26 +14,24 @@ library(car)
 # read EVALUATION data set
 eval_data <- read.csv("https://raw.githubusercontent.com/jtopor/CUNY-MSDA-621/master/HW-1/moneyball-evaluation-data.csv")
 
-#eliminate index column
-eval_data <- eval_data[,-1]
-
 # read training data set
 mb_e <- read.csv("https://raw.githubusercontent.com/jtopor/CUNY-MSDA-621/master/HW-1/moneyball-training-data.csv")
 
 #eliminate index column
-mb_e1 <- mb_e[,-1]
+# mb_e1 <- mb_e[,-1]
+mb_e1 <- mb_e
 
 #####Creating a new column for batting singles and eliminating hits for batting
 
 #add singles column for hitting
 mb_e1$TEAM_BATTING_1B <- as.numeric(mb_e1$TEAM_BATTING_H-mb_e1$TEAM_BATTING_2B-mb_e1$TEAM_BATTING_3B-mb_e1$TEAM_BATTING_HR)
-mb_e1 <- mb_e1[,-2]
+mb_e1 <- mb_e1[,-3]
 mb_e1 <- as.data.frame(mb_e1)
 
 eval_data$TEAM_BATTING_1B <- as.numeric(eval_data$TEAM_BATTING_H - eval_data$TEAM_BATTING_2B - eval_data$TEAM_BATTING_3B - eval_data$TEAM_BATTING_HR)
 
-# HITS is in first column in eval data
-eval_data <- eval_data[,-1]
+# HITS is in second column in eval data
+eval_data <- eval_data[,-2]
 
 # ADD A DUMMY COLUMN TO EVAL DATA FOR TARGET WINS
 eval_data$TARGET_WINS <- 0
@@ -42,10 +40,10 @@ eval_data$TARGET_WINS <- 0
 #####Eliminate HBP, CS, and pitching HR's.
 
 ```{r}
-mb <- mb_e1[,-c(8,9,11)]
+mb <- mb_e1[,-c(9,10,12)]
 # summary(mb)
 
-eval_data <- eval_data[,-c(7,8,10)]
+eval_data <- eval_data[,-c(8,9,11)]
 # summary(eval_data)
 ```
 
@@ -55,20 +53,20 @@ eval_data <- eval_data[,-c(7,8,10)]
 
 #take out double plays + pitching SO + SB as data set is incomplete + Wins as they are not present in the evaluation data
 
-BSO.1 <- lm(data=mb, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB -TARGET_WINS)
+BSO.1 <- lm(data=mb, TEAM_BATTING_SO~. - INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB -TARGET_WINS)
 summary(BSO.1)
 
 #eliminate doubles
-BSO.2 <- lm(data=mb, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TARGET_WINS -TEAM_BATTING_2B)
+BSO.2 <- lm(data=mb, TEAM_BATTING_SO~. - INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TARGET_WINS -TEAM_BATTING_2B)
 summary(BSO.2)
 vif(BSO.2)
 
 # vif says remove TEAM_PITCHING_BB
-BSO.3 <- lm(data=mb, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TARGET_WINS -TEAM_BATTING_2B - TEAM_PITCHING_BB)
+BSO.3 <- lm(data=mb, TEAM_BATTING_SO~. - INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TARGET_WINS -TEAM_BATTING_2B - TEAM_PITCHING_BB)
 summary(BSO.3)
 
 # pvals say remove PITCHING_H
-BSO.4 <- lm(data=mb, TEAM_BATTING_SO~. -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TARGET_WINS -TEAM_BATTING_2B - TEAM_PITCHING_BB - TEAM_PITCHING_H)
+BSO.4 <- lm(data=mb, TEAM_BATTING_SO~. - INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_SO -TEAM_BASERUN_SB - TARGET_WINS -TEAM_BATTING_2B - TEAM_PITCHING_BB - TEAM_PITCHING_H)
 summary(BSO.4)
 
 vif(BSO.4)
@@ -131,13 +129,13 @@ eval_data.1$TEAM_BATTING_SO <- eval.BSO.imp
 ```{r}
 #take out double plays + SB as data set is incomplete and wins as they are not present in evaluation data
 
-PSO.1 <- lm(data=mb1, TEAM_PITCHING_SO~. -TEAM_FIELDING_DP -TEAM_BASERUN_SB - TARGET_WINS)
+PSO.1 <- lm(data=mb1, TEAM_PITCHING_SO~. - INDEX -TEAM_FIELDING_DP -TEAM_BASERUN_SB - TARGET_WINS)
 summary(PSO.1)
 
 vif(PSO.1)
 # vif says remove TEAM_PITCHING_BB
 
-PSO.2 <- lm(data=mb1, TEAM_PITCHING_SO~. -TEAM_FIELDING_DP -TEAM_BASERUN_SB - TARGET_WINS - TEAM_PITCHING_BB)
+PSO.2 <- lm(data=mb1, TEAM_PITCHING_SO~. - INDEX -TEAM_FIELDING_DP -TEAM_BASERUN_SB - TARGET_WINS - TEAM_PITCHING_BB)
 summary(PSO.2)
 
 vif(PSO.2)
@@ -191,31 +189,31 @@ eval_data.2$TEAM_PITCHING_SO <- eval.PSO.imp
 #####Build model for SB
 ```{r}
 #Take out DP as incomplete data and target wins
-SB.1 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP - TARGET_WINS)
+SB.1 <- lm(data=mb2, TEAM_BASERUN_SB~. -INDEX -TEAM_FIELDING_DP - TARGET_WINS)
 summary(SB.1)
 
 #eliminate pitching BB's
-SB.2 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS)
+SB.2 <- lm(data=mb2, TEAM_BASERUN_SB~. -INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS)
 summary(SB.2)
 
 #eliminate singles
-SB.3 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_1B - TARGET_WINS)
+SB.3 <- lm(data=mb2, TEAM_BASERUN_SB~. - INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_1B - TARGET_WINS)
 summary(SB.3)
 
 #simplify the model by taking out pitching
-SB.4 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_1B - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H)
+SB.4 <- lm(data=mb2, TEAM_BASERUN_SB~. - INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_BB -TEAM_BATTING_1B - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H)
 summary(SB.4)
 
 #add singles back in
-SB.5 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H)
+SB.5 <- lm(data=mb2, TEAM_BASERUN_SB~. - INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H)
 summary(SB.5)
 
 #eliminate doubles
-SB.6 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H - TEAM_BATTING_2B)
+SB.6 <- lm(data=mb2, TEAM_BASERUN_SB~. - INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H - TEAM_BATTING_2B)
 summary(SB.6)
 
 #eliminate walks
-SB.7 <- lm(data=mb2, TEAM_BASERUN_SB~.-TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H - TEAM_BATTING_2B - TEAM_BATTING_BB)
+SB.7 <- lm(data=mb2, TEAM_BASERUN_SB~. - INDEX -TEAM_FIELDING_DP -TEAM_PITCHING_BB - TARGET_WINS - TEAM_PITCHING_SO - TEAM_PITCHING_H - TEAM_BATTING_2B - TEAM_BATTING_BB)
 summary(SB.7)
 
 #all low P value and F statistic of 202.9 with adj R squared of 0.3427
@@ -266,11 +264,11 @@ eval_data.3$TEAM_BASERUN_SB <- eval.SB.imp
 ```{r}
 
 #remove target wins
-DP.1 <- lm(data=mb3, TEAM_FIELDING_DP~.-TARGET_WINS)
+DP.1 <- lm(data=mb3, TEAM_FIELDING_DP~. - INDEX -TARGET_WINS)
 summary(DP.1)
 
 #remove batting 2B's
-DP.2 <- lm(data=mb3, TEAM_FIELDING_DP~.-TARGET_WINS - TEAM_BATTING_2B)
+DP.2 <- lm(data=mb3, TEAM_FIELDING_DP~. - INDEX -TARGET_WINS - TEAM_BATTING_2B)
 summary(DP.2)
 # results show that EVERYTHING ELSE is statistically signficant, so:
 
@@ -279,29 +277,29 @@ vif(DP.2)
 # results show TEAM_BATTING_SO should be removed
 
 # remove TEAM_BATTING_SO
-DP.3 <- lm(data=mb3, TEAM_FIELDING_DP~. -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO)
+DP.3 <- lm(data=mb3, TEAM_FIELDING_DP~. - INDEX -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO)
 summary(DP.3)
 # p-value says remove TEAM_PITCHING_SO;
 
 
 # remove TEAM_PITCHING_SO
-DP.4 <- lm(data=mb3, TEAM_FIELDING_DP~.-TEAM_BATTING_2B -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO)
+DP.4 <- lm(data=mb3, TEAM_FIELDING_DP~. - INDEX -TEAM_BATTING_2B -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO)
 summary(DP.4)
 vif(DP.4)
 # P values and vif both indicate remove TEAM_PITCHING_BB
 
 # remove TEAM_PITCHING_BB
-DP.5 <- lm(data=mb3, TEAM_FIELDING_DP~. -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+DP.5 <- lm(data=mb3, TEAM_FIELDING_DP~. - INDEX -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
 summary(DP.5)
 vif(DP.5)
 # vif says remove TEAM_FIELDING_E; p-values all < .05 so remove TEAM_FIELDING_E
 
-DP.6 <- lm(data=mb3, TEAM_FIELDING_DP~. -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO - TEAM_PITCHING_BB - TEAM_FIELDING_E)
+DP.6 <- lm(data=mb3, TEAM_FIELDING_DP~. - INDEX -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO - TEAM_PITCHING_BB - TEAM_FIELDING_E)
 summary(DP.6)
 vif(DP.6)
 # now no collinearity but p-values say remove TEAM_PITCHING_H
 
-DP.7 <- lm(data=mb3, TEAM_FIELDING_DP~. -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO - TEAM_PITCHING_BB - TEAM_FIELDING_E - TEAM_PITCHING_H)
+DP.7 <- lm(data=mb3, TEAM_FIELDING_DP~. - INDEX -TARGET_WINS -TEAM_BATTING_2B - TEAM_BATTING_SO - TEAM_PITCHING_SO - TEAM_PITCHING_BB - TEAM_FIELDING_E - TEAM_PITCHING_H)
 summary(DP.7)
 vif(DP.7)
 # no collinearity, all p-values < .05 so stop
@@ -410,8 +408,11 @@ dim(mb)-dim(mb7)
 rownames(mb7) <- 1:nrow(mb7)
 rownames(eval_data.4) <- 1:nrow(eval_data.4)
 
-# now drop dummy column from training data
-eval_data.4 <- eval_data.4[,-13]
+# drop INDEX column from training set
+mb7 <- mb7[,-1]
+
+# now drop dummy column from evaluation data
+eval_data.4 <- eval_data.4[,-14]
 
 # create CSV files containing updated data sets
 write.csv(mb7, file = "C:/SQLData/621-HW1-Clean-Data.csv", row.names = FALSE, col.names = TRUE)
