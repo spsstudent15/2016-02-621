@@ -201,6 +201,11 @@ Stolen Bases - consider Amelia script for multiple imputing
 
 **Writeup**
 
+Ran a regression of home runs against wins using Box-cox.
+Transformed home runs to become symmetric and improve standard errors.
+Used this transformed primiteive variable in the multi regression model.
+
+
 <a href="https://github.com/spsstudent15/2016-02-621-W1/blob/master/HW_1_SMKmodel.pdf">SMK Model 1 PDF</a>
 
 <a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/HW_1_SMKmodel.Rmd">SMK Model 1 RMD</a>
