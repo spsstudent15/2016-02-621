@@ -197,10 +197,38 @@ Stolen Bases - consider Amelia script for multiple imputing
 
 # Part 3. Build Models
 
+## Model 1. SMK Model 1
 
+**Writeup**
+
+<a href="https://github.com/spsstudent15/2016-02-621-W1/blob/master/HW_1_SMKmodel.pdf">SMK Model 1 PDF</a>
+
+<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/HW_1_SMKmodel.Rmd">SMK Model 1 RMD</a>
+
+## Model 2. 
+
+**Writeup**
+
+<a href="https://github.com/spsstudent15/2016-02-621-W1/blob/master/">Model 2 PDF</a>
+
+<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/">Model 2 RMD</a>
+
+## Model 3. 
+
+**Writeup**
+
+<a href="https://github.com/spsstudent15/2016-02-621-W1/blob/master/">Model 3 PDF</a>
+
+<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/">Model 3 RMD</a>
 
 
 # Part 4. Select Models
+
+To test our models, we needed an evaluation data set with NA's imputed. We checked the imputation output to ensure it conformed with the actual distribution of each of the impacted variables in the EVAL set. 
+
+The EVAL data set with the NA's filled can be found here:
+
+<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-EvalData-.csv">Clean Eval Data</a>
 
 ```{r}
 
