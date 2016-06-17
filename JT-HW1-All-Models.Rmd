@@ -1,0 +1,1545 @@
+---
+title: "JT HW1 ALL MODELS"
+author: "James Topor"
+date: "June 17, 2016"
+output: html_document
+---
+
+# --------------------------------------------------------------------------------------------
+
+# Model # 1: General Model - All Variables
+
+This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
+
+- TEAM_BATTING_1B (derived variable)  
+- TEAM_BATTING_2B  
+- TEAM_BATTING_3B  
+- TEAM_BATTING_HR  
+- TEAM_BATTING_BB  
+- TEAM_BATTING_SO  
+- TEAM_BASERUN_SB  
+- TEAM_PITCHING_H  
+- TEAM_PITCHING_BB  
+- TEAM_PITCHING_SO  
+- TEAM_FIELDING_E  
+- TEAM_FIELDING_DP  
+
+Simply removing the *TEAM_BATTING_1B* variable yielded a model with all p-values less than $.05$. However, VIF analysis showed evidence of multiple collinear variables within the model. Subsequent removals of *TEAM_PITCHING_SO* and *TEAM_PITCHING_BB* yielded a model that called for the removal of *TEAM_BATTING_2B* on the basis of its p-value.
+
+The final model of that iteration of the linear modeling process showed clear evidence of a number of outliers as evidenced in R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model, which varies from the inital iteration in that it includes *TEAM_BATTING_2B* due to the fact that removing the outliers improved the statistical significance of the variable :
+
+TARGET_WINS = 66.261 - (0.017 * TEAM_BATTING_2B)  
+                     + (0.150 * TEAM_BATTING_3B)   
+                     + (0.109 * TEAM_BATTING_HR)  
+                     + (0.022 * TEAM_BATTING_BB)  
+                     - (0.019 * TEAM_BATTING_SO)  
+                     + (0.065 * TEAM_BASERUN_SB)  
+                     + (0.016 * TEAM_PITCHING_H)  
+                     - (0.075 * TEAM_FIELDING_E)  
+                     - (0.109 * TEAM_FIELDING_DP)  
+
+RSE =       11.49  on 2152 deg. of freedom  
+R^2 =       0.3598  
+Adj. R^2 =  0.3572  
+F Stat. =   134.4  
+MSE =       132  
+                     
+However, the diagnostic plots of that model showed a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for variables such as TEAM_BATTING_HR, TEAM_BATTING_SO, TEAM_BASERUN_SB, and TEAM_FIELDING_E.
+
+The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recommended power transform of (-1), or (1/y) and the model was re-run. The resulting Added Variable plots showed that all predictors are linearly related to the response, and we see an improvement in the variability of the residuals relative to TEAM_FIELDING_E. Furthermore, the plot of Y against the fitted values showed an improvement in the linearity of the model. 
+
+Therefore, this model appears to be an improvement over the first model when the residual plots are considered. The characteristic equation indicated by the model is as follows:
+
+TARGET_WINS = 52.88  + (0.168 * TEAM_BATTING_3B)  
+                     + (0.096 * TEAM_BATTING_HR)  
+                     + (0.027 * TEAM_BATTING_BB)   
+                     - (0.027 * TEAM_BATTING_SO)  
+                     + (0.034 * TEAM_BASERUN_SB)  
+                     + (0.004 * TEAM_PITCHING_H)  
+                     + (3252.31 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)   
+                     - (0.102 * TEAM_FIELDING_DP)  
+
+RSE =       11.86  on 2153 deg. of freedom  
+R^2 =       0.3168  
+Adj. R^2 =  0.3143  
+F Stat. =   124.8  
+MSE =       141  
+
+While this model is an improvement over the initial model, we still have component variables that appear to lack constant variability relative to the residuals for variables such as TEAM_BASERUN_SB. The lack of constant variability in the residuals is likely related to the skewed nature of the distributions of those individual variables. 
+
+In the other models discussed herein we attempt to address some of the skew issues via various methods, including Box-Cox recommended power transforms and linear combinations of various variables.
+
+```{r}
+library(car)
+
+mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv")  
+```
+
+```{r, eval = FALSE, echo = FALSE}
+
+library(alr3)
+
+# code for finding power transforms for skewed variables
+hist(mb_clean$TEAM_PITCHING_BB, breaks = 200)
+
+hist(mb_clean$TEAM_PITCHING_H, breaks = 200)
+
+hist(mb_clean$TEAM_FIELDING_E, breaks = 200)
+
+############### TEAM_PITCHING_BB ##############################
+
+summary( powerTransform( cbind(TEAM_PITCHING_BB) ~ 1, mb_clean))
+
+# TEAM_PITCHING_BB = log transform
+PBB.T <- log(mb_clean$TEAM_PITCHING_BB)
+hist(PBB.T, breaks = 200)
+
+# ---------------------
+############### PITCHING_H ###################################
+summary( powerTransform( cbind(TEAM_PITCHING_H) ~ 1, mb_clean))
+# TEAM_PITCHING_H = 1/y^3
+
+# WORKS! 
+PH.T <- 1/(mb_clean$TEAM_PITCHING_H ^ 3)
+hist(PH.T, breaks = 200)
+
+
+############## FIELDING_E #####################################
+# -------------------------
+summary( powerTransform( cbind(TEAM_FIELDING_E) ~ 1, mb_clean))
+# TEAM_FIELDING_E = -1 = 1/y or try log
+
+# WORKS!
+FE.T <- 1/mb_clean$TEAM_FIELDING_E
+hist(FE.T, breaks = 200)
+
+# Now load transformed values into data set
+
+mb.t <- mb_clean
+
+mb.t$TEAM_PITCHING_BB <- PBB.T
+mb.t$TEAM_PITCHING_H <- PH.T
+mb.t$TEAM_FIELDING_E <- FE.T
+```
+# ----------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
+
+## Build Models
+
+### Model using all remaining variables as a starting point
+
+__Yields r^2= 0.3347, Adj r^2 = 0.3322, F = 136__
+
+```{r}
+
+# keep the clean data set pure
+mb <- mb_clean
+
+# use p-value elimination
+model <- lm(data=mb, TARGET_WINS ~ . - INDEX)
+summary(model)
+
+# p-value indicates remove TEAM_BATTING_1B
+
+# --------------------
+# remove TEAM_BATTING_1B
+model.2 <- lm(data=mb, TARGET_WINS ~ . - INDEX - TEAM_BATTING_1B)
+summary(model.2)
+
+# p-values are OK so check collinearity
+vif(model.2)
+# vif says remove TEAM_BATTING_SO or PITCHING_SO, so remove PITCHING_SO per other models
+
+# -------------------
+#eliminate TEAM_PITCHING_SO
+model.3 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_BATTING_1B - TEAM_PITCHING_SO)
+summary(model.3)
+
+vif(model.3)
+
+# vif says remove TEAM_BATTING_BB or PITCHINNG_BB so go with PITCHING_BB
+
+# -------------------
+#eliminate TEAM_PITCHING_BB
+model.4 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_BATTING_1B - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.4)
+
+# --------------------
+# eliminate TEAM_BATTING_2B
+model.5 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_BATTING_1B - TEAM_PITCHING_SO - TEAM_PITCHING_BB - TEAM_BATTING_2B)
+summary(model.5)
+
+# p-values < .05 so check for collinearity
+vif(model.5)
+
+# no colinearity so STOP HERE
+```
+
+
+## DIAGNOSTICS
+
+Plots are linear except for errors
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.5, id.n = 2)
+```
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+Plots: Lack of constant variability in Resid vs. Fitted. Normal QQ shows a bit of skew in upper right end but not drastic; Residuals appear to be within 2 std devs. Outliers at 1920, 1737, 393, 1515
+```{r}
+# plot summary residual plots
+par(mfrow=c(2,2))
+plot(model.5)
+```
+
+### PLOT STANDARDIZED RESIDUALS AGAINST EACH PREDICTOR
+
+Results show lack of constant variability for several variables: 3B, HR, SB, Pitch_H, Fielding_E, BATT_BB, BATT_SO, FIELDING_DP
+```{r}
+
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+StanRes1 <- rstandard(model.5)
+par(mfrow=c(2,2))
+
+plot(mb$TEAM_BATTING_3B, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_HR, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_BB, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_SO, StanRes1, ylab="Standardized Residuals")
+
+plot(mb$TEAM_BASERUN_SB, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_PITCHING_H, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_FIELDING_E, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_FIELDING_DP, StanRes1, ylab="Standardized Residuals")
+
+```
+
+### PLOT Y AGAINST FITTED VALUES
+
+Plot shows a linear relationship whose slope might be skewed by outliers in upper right of plot
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+fit1 <- model.5$fitted.values
+# nrow(fit1)
+
+par(mfrow = c(1,1))
+plot(fit1, mb$TARGET_WINS,xlab="Fitted Values")
+abline(lsfit(fit1, mb$TARGET_WINS),lty=2)
+```
+
+Now cleanup data objects that are no longer required
+```{r}
+rm(model, model.2, model.3, model.4)
+```
+
+
+# -----------------------------------------------------------------------------------------
+
+## REMOVE OUTLIERS AND REFIT
+
+Per Cooks Distance, remove items 1920, 1737, 393, 1515
+
+```{r}
+############ FIRST SET OF OUTLIERS ######################
+# drop outlier records from data set
+mb_rem <- mb_clean[-c(1920, 1737, 393, 1515),]
+
+# renumber rows
+rownames(mb_rem) <- 1:nrow(mb_rem)
+```
+
+# -----------------------------------------------------------------------------------
+
+## Now refit first model from above: all variables
+
+__Yields r^2= 0.3504, Adj r^2 = 0.348, F = 145.6__
+
+```{r}
+
+# keep the clean data set pure
+mb <- mb_rem
+
+# use p-value elimination
+model <- lm(data=mb, TARGET_WINS ~ . - INDEX)
+summary(model)
+vif(model)
+# vif indicates remove TEAM_PITCHING_SO
+
+# --------------------
+# remove TEAM_PITCHING_SO
+model.2 <- lm(data=mb, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_SO)
+summary(model.2)
+
+# p-values are OK so check collinearity
+vif(model.2)
+# vif says remove TEAM_PITCHING_BB
+
+# -------------------
+#eliminate TEAM_PITCHING_BB
+model.3 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.3)
+
+# p-values say remove TEAM_BATTING_1B
+
+# -------------------
+#eliminate TEAM_BATTING_1B
+model.4 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_BATTING_1B - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.4)
+vif(model.4)
+
+# pvals say remove TEAM_BATTING_2B
+model.5 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_BATTING_2B - TEAM_BATTING_1B - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.5)
+vif(model.5)
+
+
+# vif and pvals OK so stop
+```
+
+
+## SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots: Lack of constant variability in Resid vs. Fitted. Normal QQ shows a bit of skew in upper right end but not drastic; Residuals appear to be within 2 std devs. __Might not be a good model__.
+```{r}
+# plot summary residual plots
+par(mfrow=c(2,2))
+plot(model.4)
+```
+
+# ------------------------------------------------------------
+## Plots show outliers so remove them and re-fit
+
+Per Cooks Distance, remove items 1931, 391, 820, 1933, 835, 2124
+
+```{r}
+############ FIRST SET OF OUTLIERS ######################
+# drop outlier records from data set
+mb_rem2 <- mb[-c(1931, 391, 820, 1933, 835, 2124),]
+
+# renumber rows
+rownames(mb_rem2) <- 1:nrow(mb_rem2)
+```
+
+## Model using all remaining variables as a starting point
+
+__Yields r^2= 0.3598, Adj r^2 = 0.3572, F = 134.4__
+
+```{r}
+
+# keep the clean data set pure
+mb <- mb_rem2
+
+# use p-value elimination
+model <- lm(data=mb, TARGET_WINS ~ . - INDEX )
+summary(model)
+
+# p-values all < .05 so check collinearity
+vif(model)
+
+# vif says remove TEAM_PITCHING_SO
+
+# -------------------
+#eliminate TEAM_PITCHING_SO
+model.2 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO)
+summary(model.2)
+
+# p-values OK so check collinearity
+vif(model.2)
+# vif says remove TEAM_PITCHING_BB
+
+# -------------------
+#eliminate TEAM_BATTING_BB
+model.3 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.3)
+
+# p-values says remove TEAM_BATTING_1B
+
+# -------------------
+#eliminate TEAM_BATTING_1B
+model.4 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO - TEAM_PITCHING_BB - TEAM_BATTING_1B)
+summary(model.4)
+
+# p-values OK so check collinearity
+vif(model.4)
+# vif OK so STOP
+
+# get MSE of residuals
+anova(model.4)
+
+```
+
+## Diagnostics
+
+Plots are linear except for errors
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.4, id.n = 2)
+```
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots: Lack of constant variability in Resid vs. Fitted. Normal QQ shows a bit of skew in upper right end but not drastic; Residuals appear to be within 2 std devs. 
+```{r}
+# plot summary residual plots
+par(mfrow=c(2,2))
+plot(model.4)
+```
+
+### PLOT STANDARDIZED RESIDUALS AGAINST EACH PREDICTOR
+
+Results show lack of constant variability for several variables: 3B, HR, SB, Pitch_H, Fielding_E, PITCH_BB, PITCH_SO, FIELDING_DP
+```{r}
+
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+StanRes1 <- rstandard(model.4)
+par(mfrow=c(2,2))
+
+plot(mb$TEAM_BATTING_2B, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_3B, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_HR, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_BB, StanRes1, ylab="Standardized Residuals")
+
+plot(mb$TEAM_BATTING_SO, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BASERUN_SB, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_PITCHING_H, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_FIELDING_E, StanRes1, ylab="Standardized Residuals")
+
+plot(mb$TEAM_FIELDING_DP, StanRes1, ylab="Standardized Residuals")
+
+```
+
+### PLOT Y AGAINST FITTED VALUES
+
+Plot shows a linear relationship whose slope might be skewed by outliers in upper right of plot
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+fit1 <- model.4$fitted.values
+# nrow(fit1)
+
+par(mfrow = c(1,1))
+plot(fit1, mb$TARGET_WINS,xlab="Fitted Values")
+abline(lsfit(fit1, mb$TARGET_WINS),lty=2)
+```
+
+
+# -------------------------------------------------------------------------------
+
+
+## Now try same model but with FIELD_E transformed by Box-Cox recommended power transform
+
+```{r}
+# TEAM_FIELDING_E: Box-cox yields -1 => 1/y
+
+mb$TEAM_FIELDING_E <- 1/mb$TEAM_FIELDING_E
+```
+
+
+__Yields r^2= 0.3168, Adj r^2 = 0.3143, F = 124.8__
+
+```{r}
+
+# use p-value elimination
+model <- lm(data=mb, TARGET_WINS ~ . - INDEX)
+summary(model)
+# p-values all < .05 so check collinearity
+
+vif(model)
+
+# vif says remove TEAM_PITCHING_SO
+
+# -------------------
+#eliminate TEAM_PITCHING_SO
+model.2 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO)
+summary(model.2)
+
+# p-values says remove TEAM_BATTING_1B
+
+# -------------------
+#eliminate TEAM_BATTING_1B
+model.3 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO - TEAM_BATTING_1B)
+summary(model.3)
+vif(model.3)
+
+# p-values says remove TEAM_PITCHING_BB
+
+# -------------------
+#eliminate TEAM_BATTING_BB
+model.4 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO - TEAM_BATTING_1B - TEAM_PITCHING_BB)
+summary(model.4)
+
+# p-values say remove doubles
+model.5 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO - TEAM_BATTING_1B - TEAM_PITCHING_BB - TEAM_BATTING_2B)
+summary(model.5)
+
+vif(model.5)
+
+# vif OK so STOP
+
+# turn off scientific formatting of results
+options(scipen=999)
+model.5
+anova(model.5)
+```
+
+## Diagnostics
+
+Plots are all linear
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.5, id.n = 2)
+```
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots: Some lack of constant variability in Resid vs. Fitted. Normal QQ shows a bit of skew in lower left end but not drastic; Residuals not all within 2 std devs.  
+```{r}
+# plot summary residual plots
+par(mfrow=c(2,2))
+plot(model.5)
+```
+
+### PLOT STANDARDIZED RESIDUALS AGAINST EACH PREDICTOR
+
+Results show lack of constant variability for several variables: 3B, HR, BB, SO, SB, Pitch_H, Fielding_E
+```{r}
+
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+StanRes1 <- rstandard(model.5)
+par(mfrow=c(2,2))
+
+plot(mb$TEAM_BATTING_3B, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_HR, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_BB, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_SO, StanRes1, ylab="Standardized Residuals")
+
+plot(mb$TEAM_BASERUN_SB, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_PITCHING_H, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_FIELDING_E, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_FIELDING_DP, StanRes1, ylab="Standardized Residuals")
+
+```
+
+### PLOT Y AGAINST FITTED VALUES
+
+Plot shows a linear relationship whose slope might be slightly skewed by outliers in upper right of plot
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+fit1 <- model.5$fitted.values
+# nrow(fit1)
+
+par(mfrow = c(1,1))
+plot(fit1, mb$TARGET_WINS,xlab="Fitted Values")
+abline(lsfit(fit1, mb$TARGET_WINS),lty=2)
+```
+
+
+```{r}
+# clean up objects in memory
+rm(list = ls())
+```
+
+
+# ------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------
+
+# Model # 2: Total Bases
+
+This model attempts to address some of the lack of constant variability found in the "General Model" discussed above by employing a linear combination of four of the predictor variables to calculate the baseball statistc known as "Total Bases". Total Bases is calculated using what our data set refers to as "TEAM_BATTING" variables as follows:
+
+Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs)
+
+Inclusion of this new variable allows us to eliminate the four component variables from the model. In fact, the TOTAL_BASES variable appears to be normally distributed, thereby negating the skew issues that were evident with its component variables.
+
+- INSERT HISTOGRAM of TOTAL_BASES HERE???
+
+This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
+
+- TEAM_TOTAL_BASES (derived variable)
+- TEAM_BATTING_BB
+- TEAM_BATTING_SO
+- TEAM_BASERUN_SB
+- TEAM_PITCHING_H
+- TEAM_PITCHING_BB
+- TEAM_PITCHING_SO
+- TEAM_FIELDING_E
+- TEAM_FIELDING_DP
+
+Three iterations of p-value / VIF bacward selection removed TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
+
+TARGET_WINS = 48.486 + (0.022 * TEAM_BATTING_BB)  
+                     - (0.015 * TEAM_BATTING_SO)  
+                     + (0.063 * TEAM_BASERUN_SB)  
+                     + (0.010 * TEAM_PITCHING_H)  
+                     - (0.064 * TEAM_FIELDING_E)  
+                     - (0.117 * TEAM_FIELDING_DP)  
+                     + (0.018 * TOTAL_BASES)  
+
+RSE =       11.7  on 2154 deg. of freedom  
+R^2 =       0.3365  
+Adj. R^2 =  0.3343  
+F Stat. =   156  
+MSE =       137  
+
+The diagnostic plots of that model show a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for variables such as TEAM_BATTING_SO, TEAM_BASERUN_SB, and TEAM_FIELDING_E.
+
+The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recommended power transform of (-1), or (1/y) and the model was re-run. The resulting Added Variable plots show that all predictors are linearly related to the response, and we see an improvement in the variability of the residuals relative to TEAM_FIELDING_E. Furthermore, the plot of Y against the fitted values shows an improvement in the linearity of the model. 
+
+Therefore, this model appears to be an improvement over the first TOTAL_BASES model when the residual plots are considered. The characteristic equation indicated by the model is as follows:
+
+TARGET_WINS = 39.164 + (0.025 * TEAM_BATTING_BB) 
+                     - (0.025 * TEAM_BATTING_SO) 
+                     + (0.038 * TEAM_BASERUN_SB) 
+                     + (2714.54 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)  
+                     - (0.115 * TEAM_FIELDING_DP)
+                     + (0.0197 * TOTAL_BASES)
+                     
+RSE =       11.97  on 2155 deg. of freedom  
+R^2 =       0.3048  
+Adj. R^2 =  0.3029  
+F Stat. =   157.5  
+MSE =       143  
+
+
+```{r}
+library(car)
+
+mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv")  
+```
+
+```{r, eval = FALSE, echo = FALSE}
+
+library(alr3)
+
+# code for finding power transforms for skewed predictors
+
+hist(mb_clean$TEAM_PITCHING_BB, breaks = 200)
+
+hist(mb_clean$TEAM_PITCHING_H, breaks = 200)
+
+hist(mb_clean$TEAM_FIELDING_E, breaks = 200)
+
+############### TEAM_PITCHING_BB ##############################
+
+summary( powerTransform( cbind(TEAM_PITCHING_BB) ~ 1, mb_clean))
+
+# TEAM_PITCHING_BB = log transform
+PBB.T <- log(mb_clean$TEAM_PITCHING_BB)
+hist(PBB.T, breaks = 200)
+
+# ---------------------
+############### PITCHING_H ###################################
+summary( powerTransform( cbind(TEAM_PITCHING_H) ~ 1, mb_clean))
+# TEAM_PITCHING_H = 1/y^3
+
+# WORKS! 
+PH.T <- 1/(mb_clean$TEAM_PITCHING_H ^ 3)
+hist(PH.T, breaks = 200)
+
+
+############## FIELDING_E #####################################
+# -------------------------
+summary( powerTransform( cbind(TEAM_FIELDING_E) ~ 1, mb_clean))
+# TEAM_FIELDING_E = -1 = 1/y or try log
+
+# WORKS!
+FE.T <- 1/mb_clean$TEAM_FIELDING_E
+hist(FE.T, breaks = 200)
+
+# Now load transformed values into data set
+
+mb.t <- mb_clean
+
+mb.t$TEAM_PITCHING_BB <- PBB.T
+mb.t$TEAM_PITCHING_H <- PH.T
+mb.t$TEAM_FIELDING_E <- FE.T
+```
+
+# ----------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------
+
+
+## Build a model with Total Bases added and all of the other hitting vars removed
+
+First, create the new variable and discard its components
+
+```{r}
+mb_t <- mb_clean
+
+mb_t$TOTAL_BASES <- mb_clean$TEAM_BATTING_1B + (2 * mb_clean$TEAM_BATTING_2B) + 
+                       (3 * mb_clean$TEAM_BATTING_3B) + (4 * mb_clean$TEAM_BATTING_HR)
+
+# plot histogram to check shape of distribution
+par(mfrow = c(1,1))
+hist(mb_t$TOTAL_BASES, breaks = 200)
+
+# now drop 1B, 2B, 3B, HR
+mb_tb <- mb_t[,c(1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 15)]
+
+###################################################################
+# check correlation with WINS and run simple linear model
+cor(mb_tb$TARGET_WINS, mb_tb$TOTAL_BASES) 
+mtest <- lm(data=mb_tb, TARGET_WINS ~ TOTAL_BASES)
+summary(mtest) 
+
+# shows .381 correlation and Adj R^2 of 0.1453
+
+plot(mb_tb$TARGET_WINS ~ mb_tb$TOTAL_BASES)
+abline(lm(mb_tb$TARGET_WINS ~ mb_tb$TOTAL_BASES), lty=2)
+# plot doesn't show unusual relationship
+######################################################################
+```
+
+__Yields r^2= 0.3175, Adj. R^2 = 0.3153, F = 143.8__
+
+```{r}
+# fit model
+model <- lm(data=mb_tb, TARGET_WINS ~ . - INDEX)
+summary(model)
+
+# All p-values < .05 so check collinearity
+vif(model)
+# vif indicates remove TEAM_BATTING_SO or TEAM_PITCHING_SO. CHoose PITCHING_SO as in other models
+
+# ----------------------
+# remove TEAM_PITCHING_SO
+model.2 <- lm(data=mb_tb, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_SO)
+summary(model.2)
+
+# All p-values < .05 so check collinearity
+vif(model.2)
+# vif indicates remove TEAM_PITCHING_BB
+
+# ----------------------
+# remove TEAM_PITCHING_BB
+model.3 <- lm(data=mb_tb, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.3)
+
+# All p-values < .05 so check collinearity
+vif(model.3)
+# no further collinearity issues so STOP
+
+# check 95% confidence intervals for coefficients
+confint(model.3)
+```
+
+## Diagnostics
+
+Plots for Fielding_E  shows skew. Others are pretty linear
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.3, id.n = 2)
+```
+
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots look good except for outliers. Lack of Constant variability in Resid vs. Fitted at very large values of Yhat; normal distribution of residuals except for outliers, most residuals within 2 std dev and well within Cook's distance
+```{r}
+#Figure 5.6 on page 129 MARR text
+par(mfrow=c(2,2))
+plot(model.3)
+```
+
+### PLOT STANDARDIZED RESIDUALS AGAINST EACH PREDICTOR
+
+Results show lack of constant variability for BASERUN_SB, PITCHING_H, PITCHING_SO, FIELDING_E, FIELDING_DP
+```{r}
+
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+StanRes1 <- rstandard(model.3)
+par(mfrow=c(2,2))
+
+plot(mb_tb$TEAM_BATTING_BB, StanRes1, ylab="Standardized Residuals")
+plot(mb_tb$TEAM_BATTING_SO, StanRes1, ylab="Standardized Residuals")
+plot(mb_tb$TEAM_BASERUN_SB, StanRes1, ylab="Standardized Residuals")
+plot(mb_tb$TEAM_PITCHING_H, StanRes1, ylab="Standardized Residuals")
+
+plot(mb_tb$TEAM_FIELDING_E, StanRes1, ylab="Standardized Residuals")
+plot(mb_tb$TEAM_FIELDING_DP, StanRes1, ylab="Standardized Residuals")
+plot(mb_tb$TOTAL_BASES, StanRes1, ylab="Standardized Residuals")
+```
+
+### PLOT Y AGAINST FITTED VALUES
+
+Might be some skew due to outliers
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+fit1 <- model.3$fitted.values
+
+par(mfrow = c(1,1))
+plot(fit1, mb_tb$TARGET_WINS,xlab="Fitted Values")
+abline(lsfit(fit1, mb_tb$TARGET_WINS),lty=2)
+```
+
+
+# -----------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
+
+## REMOVE OUTLIERS AND REFIT
+
+Per Cooks Distance, remove items 1920, 1737, 393, 1515
+
+```{r}
+############ FIRST SET OF OUTLIERS ######################
+# drop outlier records from data set
+mb_rem <- mb_tb[-c(1920, 1737, 393, 1515),]
+
+# renumber rows
+rownames(mb_rem) <- 1:nrow(mb_rem)
+```
+
+# -----------------------------------------------------------------------------------
+
+## Now refit first model from above: all variables
+
+
+__Yields r^2= 0.3287, Adj r^2 = 0.3265, F = 151.1__
+
+```{r}
+
+# keep the clean data set pure
+mb <- mb_rem
+
+# use p-value elimination
+model <- lm(data=mb, TARGET_WINS ~ . - INDEX)
+summary(model)
+
+# pvals all < .05 so check collinearity
+
+vif(model)
+# vif indicates remove TEAM_BATTING_SO and PITCHING_SO. CHoose PITCHING_SO again
+
+# --------------------
+# remove TEAM_PITCHING_SO
+model.2 <- lm(data=mb, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_SO)
+summary(model.2)
+
+# p-values are OK so check collinearity
+vif(model.2)
+# vif says remove TEAM_BATTING_BB
+
+# -------------------
+#eliminate TEAM_BATTING_BB or PITCHING_BB so choose PITCHING_BB
+model.3 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_BB - TEAM_PITCHING_SO)
+summary(model.3)
+
+# p-values OK so check collinearity
+vif(model.3)
+# vif and pvals OK so STOP HERE
+
+# check 95% confidence intervals for coefficients
+confint(model.3)
+```
+
+## Diagnostics
+
+Plots for Fielding_E shows skew. Others are pretty linear
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.3, id.n = 2)
+```
+
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots: Lack of constant variability in Resid vs. Fitted. Normal QQ shows a bit of skew in upper right end but not drastic; Some residuals appear to be outside 2 std devs. __Might not be a good model__. Outliers at 1528, 1922, 820, 1933, 1733, 835
+```{r}
+# plot summary residual plots
+par(mfrow=c(2,2))
+plot(model.3)
+```
+
+
+### Plots show outliers so remove them and re-fit
+
+Per Cooks Distance, remove 1528, 1922, 820, 1933, 1733, 835
+
+```{r}
+############ SECOND SET OF OUTLIERS ######################
+# drop outlier records from data set
+mb_rem2 <- mb[-c(1528, 1922, 820, 1933, 1733, 835),]
+
+# renumber rows
+rownames(mb_rem2) <- 1:nrow(mb_rem2)
+```
+
+### Model using all remaining variables as a starting point
+
+__Yields r^2= 0.33655, Adj r^2 = 0.3343, F = 156__
+
+```{r}
+
+# keep the clean data set pure
+mb <- mb_rem2
+
+# use p-value elimination
+model <- lm(data=mb, TARGET_WINS ~ . - INDEX)
+summary(model)
+# p-values all < .05 so check collinearity
+
+vif(model)
+
+# vif says remove TEAM_BATTING_SO
+
+# -------------------
+#eliminate TEAM_BATTING_SO or PITCHING_SO so choose PITCHING_SO again
+model.2 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO)
+summary(model.2)
+
+# p-values OK so check collinearity
+vif(model.2)
+# vif says remove TEAM_BATTING_BB or PITCHING_BB so choose PITCHING_BB again
+
+# -------------------
+#eliminate TEAM_PITCHING_BB
+model.3 <- lm(data=mb, TARGET_WINS ~. - INDEX - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.3)
+
+vif(model.3)
+# p-values and VIF OK so STOP
+
+anova(model.3)
+
+# check 95% confidence intervals for coefficients
+confint(model.3)
+```
+
+## Diagnostics
+
+Plots for Fielding_E shows skew. Others are pretty linear
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.3, id.n = 2)
+```
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots: Lack of constant variability in Resid vs. Fitted but only for extreme outliers. Normal QQ looks very good; Some Residuals appear to be outside 2 std devs
+```{r}
+# plot summary residual plots
+par(mfrow=c(2,2))
+plot(model.3)
+```
+
+### PLOT STANDARDIZED RESIDUALS AGAINST EACH PREDICTOR
+
+Results show lack of constant variability for BASERUN_SB, PITCHING_H, PITCHING_SO, FIELDING_E, FIELDING_DP
+```{r}
+
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+StanRes1 <- rstandard(model.3)
+par(mfrow=c(2,2))
+
+plot(mb$TEAM_BATTING_BB, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_SO, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BASERUN_SB, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_PITCHING_H, StanRes1, ylab="Standardized Residuals")
+
+plot(mb$TEAM_FIELDING_E, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_FIELDING_DP, StanRes1, ylab="Standardized Residuals")
+plot(mb$TOTAL_BASES, StanRes1, ylab="Standardized Residuals")
+```
+
+### PLOT Y AGAINST FITTED VALUES
+
+Might be some skew due to outliers
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+fit1 <- model.3$fitted.values
+
+par(mfrow = c(1,1))
+plot(fit1, mb$TARGET_WINS,xlab="Fitted Values")
+abline(lsfit(fit1, mb$TARGET_WINS),lty=2)
+```
+# -------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------
+
+## Now try same model but with FIELD_E transformed according to Box-Cox
+
+```{r}
+# TEAM_FIELDING_E: Box-Cox yields power xform of -1 => 1/y
+
+mb$TEAM_FIELDING_E <- 1/mb$TEAM_FIELDING_E
+```
+
+Now refit first model from above: all variables
+
+## Model using all remaining variables as a starting point
+
+__Yields r^2= 0.3048, Adj r^2 = 0.3029, F = 157.5__
+
+```{r}
+
+# fit model
+model <- lm(data=mb, TARGET_WINS ~ . - INDEX)
+summary(model)
+
+# p-vals say remove TEAM_PITCHING_H
+
+# ----------------------
+# remove TEAM_PITCHING_H
+model.2 <- lm(data=mb, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_H)
+summary(model.2)
+
+vif(model.2)
+# vif says remove TEAM_BATTING_SO or PITCHING_SO so discard PITCHING_SO again
+
+# ----------------------
+# remove TEAM_PITCHING_SO
+model.3 <- lm(data=mb, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_H - TEAM_PITCHING_SO)
+summary(model.3)
+
+vif(model.3)
+# vif say remove TEAM_BATTING_BB or PITCHING_BB - go with PITCHING_BB again
+
+# ----------------------
+# remove TEAM_PITCHING_BB
+model.4 <- lm(data=mb, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_H - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.4)
+
+# pvals all < .05 so check collinearity
+vif(model.4)
+
+options(scipen=999)
+model.4
+anova(model.4)
+
+# no collinearity so STOP
+# check 95% confidence intervals for coefficients
+confint(model.4)
+
+```
+
+## Diagnostics
+
+Plots show all variables are linear to response
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.4, id.n = 2)
+```
+
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots: Some lack of Constant variability in Resid vs. Fitted at both ends; normal distribution of residuals; many residuals outside of 2 std devs __PROBABLY NOT A GOOD MODEL__
+```{r}
+#Figure 5.6 on page 129 MARR text
+par(mfrow=c(2,2))
+plot(model.4)
+```
+
+### PLOT STANDARDIZED RESIDUALS AGAINST EACH PREDICTOR
+
+Results show lack of constant variability for PITCHING_SO, FIELDING_E
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+StanRes1 <- rstandard(model.4)
+par(mfrow=c(2,2))
+
+plot(mb$TEAM_BATTING_BB, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BATTING_SO, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_BASERUN_SB, StanRes1, ylab="Standardized Residuals")
+plot(mb$TEAM_FIELDING_E, StanRes1, ylab="Standardized Residuals")
+
+plot(mb$TEAM_FIELDING_DP, StanRes1, ylab="Standardized Residuals")
+plot(mb$TOTAL_BASES, StanRes1, ylab="Standardized Residuals")
+```
+
+### PLOT Y AGAINST FITTED VALUES
+
+Plot shows a linear relationship with no pattern or skew
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+fit1 <- model.4$fitted.values
+
+par(mfrow = c(1,1))
+plot(fit1, mb$TARGET_WINS,xlab="Fitted Values")
+abline(lsfit(fit1, mb$TARGET_WINS),lty=2)
+```
+
+```{r}
+# clean up objects in memory
+rm(list = ls())
+```
+
+# ------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------
+
+# Model 3: Total Bases PLUS
+
+This model attempts to improve upon the results of the "Total Bases" model by extending the TOTAL_BASES variable to include the TEAM_BATTING_BB and TEAM_BASERUN_SB variables. The logic behind adding these two variables to the TOTAL_BASES variable comes from the fact that both, like the component variables of TOTAL_BASES, represent basepath advancements by a team's offense.
+
+"Total Bases Plus"" (referred to as TB_PLUS hereon) is calculated using what our data set refers to as "TEAM_BATTING" and "TEAM_BASERUN" variables as follows:
+
+Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs) + BB + SB
+
+Inclusion of this new variable allows us to eliminate the two additional component variables from the model. In fact, the TB_PLUS variable, like the TOTAL_BASES variable used earlier appears to be normally distributed, thereby negating the skew issues that were evident with its component variables.
+
+- INSERT HISTOGRAM of TB_PLUS HERE???
+
+This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
+
+- TB_PLUS (derived variable)
+- TEAM_BATTING_SO
+- TEAM_PITCHING_H
+- TEAM_PITCHING_BB
+- TEAM_PITCHING_SO
+- TEAM_FIELDING_E
+- TEAM_FIELDING_DP
+
+Four iterations of p-value / VIF bacward selection removed TEAM_PITCHING_H, TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
+
+TARGET_WINS = 52.330 - (0.016 * TEAM_BATTING_SO)  
+                     - (0.034 * TEAM_FIELDING_E)  
+                     - (0.154 * TEAM_FIELDING_DP)  
+                     + (0.025 * TB_PLUS)  
+
+RSE =       12.12  on 2162 deg. of freedom  
+R^2 =       0.2944   
+Adj. R^2 =  0.2931   
+F Stat. =   225.5  
+MSE =       145
+
+As with the "General Model" and the "Total Bases" model, the diagnostic plots showed a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for the variables TEAM_BATTING_SO and TEAM_FIELDING_E.
+
+The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recommended power transform of (-1), or (1/y) and the model was re-run. The resulting Added Variable plots showed that all predictors are linearly related to the response, and we found an improvement in the variability of the residuals relative to TEAM_FIELDING_E. Furthermore, the plot of Y against the fitted values shows a non-skewed linear relationship. 
+
+Therefore, this model appears to be an improvement over the first TB_PLUS model when the residual plots are considered. Furthermore, the number of predictor variables used here is two fewer than that of the "Total Bases" model discussed earlier. The characteristic equation indicated by the model is as follows:
+
+TARGET_WINS = 42.160 - (0.023 * TEAM_BATTING_SO) 
+                     + (2366.82 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)  
+                     - (0.140 * TEAM_FIELDING_DP)
+                     + (0.022 * TB_PLUS)
+                     
+RSE =       12.13  on 2162 deg. of freedom  
+R^2 =       0.2932  
+Adj. R^2 =  0.2919  
+F Stat. =   224.3   
+MSE =       147  
+
+
+```{r}
+library(car)
+
+# read clean data set from Github
+
+mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv")  
+```
+
+
+
+
+```{r, eval = FALSE, echo = FALSE}
+library(alr3)
+
+# Code for finding power transforms for skewed predictors
+hist(mb_clean$TEAM_PITCHING_BB, breaks = 200)
+
+hist(mb_clean$TEAM_PITCHING_H, breaks = 200)
+
+hist(mb_clean$TEAM_FIELDING_E, breaks = 200)
+
+############### TEAM_PITCHING_BB ##############################
+
+summary( powerTransform( cbind(TEAM_PITCHING_BB) ~ 1, mb_clean))
+
+# TEAM_PITCHING_BB = log transform
+PBB.T <- log(mb_clean$TEAM_PITCHING_BB)
+hist(PBB.T, breaks = 200)
+
+# ---------------------
+############### PITCHING_H ###################################
+summary( powerTransform( cbind(TEAM_PITCHING_H) ~ 1, mb_clean))
+# TEAM_PITCHING_H = 1/y^3
+
+# WORKS! 
+PH.T <- 1/(mb_clean$TEAM_PITCHING_H ^ 3)
+hist(PH.T, breaks = 200)
+
+
+############## FIELDING_E #####################################
+# -------------------------
+summary( powerTransform( cbind(TEAM_FIELDING_E) ~ 1, mb_clean))
+# TEAM_FIELDING_E = -1 = 1/y or try log
+
+# WORKS!
+FE.T <- 1/mb_clean$TEAM_FIELDING_E
+hist(FE.T, breaks = 200)
+
+# Now load transformed values into data set
+
+mb.t <- mb_clean
+
+mb.t$TEAM_PITCHING_BB <- PBB.T
+mb.t$TEAM_PITCHING_H <- PH.T
+mb.t$TEAM_FIELDING_E <- FE.T
+```
+
+# ---------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------
+
+## Build a model with Total Bases + SB + BB added and all of the other hitting vars removed
+
+```{r}
+
+# create new variable and drop its components
+mb_t <- mb_clean
+
+mb_t$TB_PLUS <- mb_clean$TEAM_BATTING_1B + (2 * mb_clean$TEAM_BATTING_2B) + 
+                       (3 * mb_clean$TEAM_BATTING_3B) + (4 * mb_clean$TEAM_BATTING_HR) + 
+                       mb_clean$TEAM_BATTING_BB + mb_clean$TEAM_BASERUN_SB
+
+par(mfrow = c(1,1))
+hist(mb_t$TB_PLUS, breaks = 200)
+
+# now drop 1B, 2B, 3B, HR, BB, SB
+mb_tbp <- mb_t[,c(1, 2, 7, 9, 10, 11, 12, 13, 15)]
+
+###################################################################
+# check correlation with WINS and run simple linear model
+cor(mb_tbp$TARGET_WINS, mb_tbp$TB_PLUS) 
+mtest <- lm(data=mb_tbp, TARGET_WINS ~ TB_PLUS)
+summary(mtest) 
+
+# shows .448 correlation and Adj R^2 of 0.2002 => better than TOTAL_BASES
+
+plot(mb_tbp$TARGET_WINS ~ mb_tbp$TB_PLUS)
+abline(lm(mb_tbp$TARGET_WINS ~ mb_tbp$TB_PLUS), lty=2)
+# plot doesn't show unusual relationship
+######################################################################
+```
+
+# -----------------------------------------------------------------------------
+
+__Yields r^2= 0.2845, Adj. R^2 = 0.2832, F = 215.4__
+
+```{r}
+# fit model
+model <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX)
+summary(model)
+
+# p-vals say remove TEAM_PITCHING_H
+
+# ----------------------
+# remove TEAM_PITCHING_H
+model.2 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_H)
+summary(model.2)
+
+# All p-values < .05 so check collinearity
+vif(model.2)
+# vif indicates remove TEAM_BATTING_SO or TEAM_PITCHING_SO, so try removing PITCHING_SO
+
+# remove TEAM_PITCHING_SO
+model.3 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_H - TEAM_PITCHING_SO)
+summary(model.3)
+
+# p-vals say remove TEAM_PITCHING_BB
+
+# ----------------------
+# remove TEAM_PITCHING_BB
+model.4 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_H - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.4)
+
+# pvals all < .05 so check collinearity
+vif(model.4)
+
+# no collinearity so STOP
+
+```
+
+## Diagnostics
+
+Plots for Fielding_E shows skew. Others are pretty linear
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.4, id.n = 2)
+```
+
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots: outliers at 2012, 1820, 859. Lack of Constant variability in Resid vs. Fitted at very large values of Yhat; normal distribution of residuals except for outliers, most residuals within 2 std dev and well within Cook's distance
+```{r}
+#Figure 5.6 on page 129 MARR text
+par(mfrow=c(2,2))
+plot(model.4)
+```
+
+### PLOT STANDARDIZED RESIDUALS AGAINST EACH PREDICTOR
+
+Results show lack of constant variability for PITCHING_SO, FIELDING_E, FIELDING_DP, TB_PLUS
+```{r}
+
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+StanRes1 <- rstandard(model.4)
+par(mfrow=c(2,2))
+
+plot(mb_tbp$TEAM_BATTING_SO, StanRes1, ylab="Standardized Residuals")
+plot(mb_tbp$TEAM_FIELDING_E, StanRes1, ylab="Standardized Residuals")
+plot(mb_tbp$TEAM_FIELDING_DP, StanRes1, ylab="Standardized Residuals")
+plot(mb_tbp$TB_PLUS, StanRes1, ylab="Standardized Residuals")
+```
+
+### PLOT Y AGAINST FITTED VALUES
+
+Plot shows a linear relationship with no pattern or skew
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+fit1 <- model.4$fitted.values
+
+par(mfrow = c(1,1))
+plot(fit1, mb_tbp$TARGET_WINS,xlab="Fitted Values")
+abline(lsfit(fit1, mb_tbp$TARGET_WINS),lty=2)
+```
+
+
+# -----------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
+
+## REMOVE OUTLIERS AND REFIT
+
+Per Cooks Distance, remove items 836, 821, 1920, 1737, 1515
+
+```{r}
+############ FIRST SET OF OUTLIERS ######################
+# drop outlier records from data set
+mb_rem <- mb_tbp[-c(836, 821, 1920, 1737, 1515),]
+
+# save first data set
+mb_tbp_orig <- mb_tbp
+
+# renumber rows
+rownames(mb_rem) <- 1:nrow(mb_rem)
+```
+
+# -----------------------------------------------------------------------------------
+
+## Now refit first model from above: all variables
+
+__Yields r^2= 0.2944, Adj r^2 = 0.2931, F = 225.5__
+
+```{r}
+
+# keep the clean data set pure
+mb_tbp <- mb_rem
+
+# fit model
+model <- lm(data=mb_tbp, TARGET_WINS ~ .- INDEX)
+summary(model)
+
+# p-vals say remove TEAM_PITCHING_H
+
+# ----------------------
+# remove TEAM_PITCHING_H
+model.2 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_H)
+summary(model.2)
+
+# All p-values < .05 so check collinearity
+vif(model.2)
+# vif indicates remove TEAM_BATTING_SO or TEAM_PITCHING_SO, so remove PITCHING_SO again
+
+# ----------------------
+# remove TEAM_PITCHING_SO
+model.3 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_H - TEAM_PITCHING_SO)
+summary(model.3)
+
+# p-vals say remove TEAM_PITCHING_BB
+
+
+# ----------------------
+# remove TEAM_PITCHING_BB
+model.4 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_H - TEAM_PITCHING_SO - TEAM_PITCHING_BB)
+summary(model.4)
+
+# pvals all < .05 so check collinearity
+vif(model.4)
+
+anova(model)
+
+# no collinearity so STOP
+
+```
+
+## Diagnostics
+
+Plots for Fielding_E shows skew. Others are pretty linear
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.4, id.n = 2)
+```
+
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots: Some lack of Constant variability in Resid vs. Fitted at very large values of Yhat; normal distribution of residuals; most residuals within 2 std dev and well within Cook's distance
+```{r}
+#Figure 5.6 on page 129 MARR text
+par(mfrow=c(2,2))
+plot(model.4)
+```
+
+### PLOT STANDARDIZED RESIDUALS AGAINST EACH PREDICTOR
+
+Results show lack of constant variability for PITCHING_SO, FIELDING_E, FIELDING_DP, TB_PLUS
+```{r}
+
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+StanRes1 <- rstandard(model.4)
+par(mfrow=c(2,2))
+
+plot(mb_tbp$TEAM_BATTING_SO, StanRes1, ylab="Standardized Residuals")
+plot(mb_tbp$TEAM_FIELDING_E, StanRes1, ylab="Standardized Residuals")
+plot(mb_tbp$TEAM_FIELDING_DP, StanRes1, ylab="Standardized Residuals")
+plot(mb_tbp$TB_PLUS, StanRes1, ylab="Standardized Residuals")
+```
+
+### PLOT Y AGAINST FITTED VALUES
+
+Plot shows a linear relationship with no pattern or skew
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+fit1 <- model.4$fitted.values
+
+par(mfrow = c(1,1))
+plot(fit1, mb_tbp$TARGET_WINS,xlab="Fitted Values")
+abline(lsfit(fit1, mb_tbp$TARGET_WINS),lty=2)
+```
+
+
+# -------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------
+
+## Now try same model but with FIELD_E transformed using Box-Cox
+
+```{r}
+# TEAM_FIELDING_E: Box-cox says -1 power transform => 1/y 
+
+mb_tbp$TEAM_FIELDING_E <- 1/mb_tbp$TEAM_FIELDING_E
+```
+
+
+Now refit first model from above: Start with all variables
+
+__Yields r^2= 0.2932, Adj r^2 = 0.2919, F = 224.3__
+
+```{r}
+
+# fit model
+model <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX)
+summary(model)
+
+# p-vals say remove TEAM_PITCHING_BB
+
+# ----------------------
+# remove TEAM_PITCHING_BB
+model.2 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_BB)
+summary(model.2)
+
+# p-values say remove TEAM_PITCHING_H
+
+# ----------------------
+# remove TEAM_PITCHING_H
+model.3 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_BB - TEAM_PITCHING_H)
+summary(model.3)
+
+# p-vals say remove TEAM_PITCHING_SO
+
+# ----------------------
+# remove TEAM_PITCHING_SO
+model.4 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_BB - TEAM_PITCHING_H - TEAM_PITCHING_SO)
+summary(model.4)
+
+# pvals all < .05 so check collinearity
+vif(model.4)
+
+# no collinearity so STOP
+options(scipen=999)
+model.4
+anova(model.4)
+```
+
+## Diagnostics
+
+Plots show all variables are linear to response
+```{r}
+# CREATE ADDED VARIABLE PLOTS TO ASSESS predictor vs response
+avPlots(model.4, id.n = 2)
+```
+
+
+### SUMMARY MODEL DIAGNOSTIC PLOTS
+
+Plots: Some lack of Constant variability in Resid vs. Fitted at very large values of Yhat; normal distribution of residuals; most residuals within 2 std dev and well within Cook's distance
+```{r}
+#Figure 5.6 on page 129 MARR text
+par(mfrow=c(2,2))
+plot(model.4)
+```
+
+### PLOT STANDARDIZED RESIDUALS AGAINST EACH PREDICTOR
+
+Results show lack of constant variability for PITCHING_SO, FIELDING_E, FIELDING_DP, TB_PLUS
+```{r}
+
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+StanRes1 <- rstandard(model.4)
+par(mfrow=c(2,2))
+
+plot(mb_tbp$TEAM_PITCHING_SO, StanRes1, ylab="Standardized Residuals")
+plot(mb_tbp$TEAM_FIELDING_E, StanRes1, ylab="Standardized Residuals")
+plot(mb_tbp$TEAM_FIELDING_DP, StanRes1, ylab="Standardized Residuals")
+plot(mb_tbp$TB_PLUS, StanRes1, ylab="Standardized Residuals")
+```
+
+### PLOT Y AGAINST FITTED VALUES
+
+Plot shows a linear relationship with no pattern or skew
+```{r}
+# get rows have no NA's from data frame
+# NoNA <- mb_mods[!rowSums(is.na(mb_mods[1:13])), ]
+
+fit1 <- model.4$fitted.values
+
+par(mfrow = c(1,1))
+plot(fit1, mb_tbp$TARGET_WINS,xlab="Fitted Values")
+abline(lsfit(fit1, mb_tbp$TARGET_WINS),lty=2)
+```
+
+```{r}
+# clean up objects in memory
+rm(list = ls())
+```
+
