@@ -412,7 +412,7 @@ rownames(eval_data.4) <- 1:nrow(eval_data.4)
 # mb7 <- mb7[,-1]
 
 # now drop dummy column from evaluation data
-eval_data.4 <- eval_data.4[,-14]
+# eval_data.4 <- eval_data.4[,-14]
 
 # create CSV files containing updated data sets
 write.csv(mb7, file = "C:/SQLData/621-HW1-Clean-Data.csv", row.names = FALSE, col.names = TRUE)
