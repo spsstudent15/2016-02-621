@@ -264,7 +264,7 @@ In the other models discussed herein we attempt to address some of the skew issu
 
 # ----------------------------------------------------------------------------------------
 
-## Model 2 - TOtal Bases 
+## Model 2 - Total Bases 
 
 This model attempts to address some of the lack of constant variability found in the "General Model" discussed above by employing a linear combination of four of the predictor variables to calculate the baseball statistc known as "Total Bases". Total Bases is calculated using what our data set refers to as "TEAM_BATTING" variables as follows:
 
