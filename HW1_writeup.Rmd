@@ -195,7 +195,7 @@ Also, after running diagnostics on several different models, SB's and TEAM_BATTI
 Stolen Bases - consider Amelia script for multiple imputing
 
 
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------
 
 # Part 3. Build Models
 
@@ -262,7 +262,7 @@ While this model is an improvement over the initial model, we still have compone
 In the other models discussed herein we attempt to address some of the skew issues via various methods, including Box-Cox recommended power transforms and linear combinations of various variables.
 
 
-# ----------------------------------------------------------------------------------------
+# -------------------------------------------------------
 
 ## Model 2 - Total Bases 
 
@@ -322,7 +322,7 @@ F Stat. =   157.5
 MSE =       143  
 
 
-# ----------------------------------------------------------------------------------------
+# -------------------------------------------------------
 
 ## Model 3 - Total Bases PLUS
 
@@ -376,21 +376,21 @@ Adj. R^2 =  0.2919
 F Stat. =   224.3   
 MSE =       147  
 
-# ----------------------------------------------------------------------------------------
+# -------------------------------------------------------
 
 ## Model 4
 
 
 - INSERT WRITEUP HERE
 
-# ----------------------------------------------------------------------------------------
+# -------------------------------------------------------
 
 ## Model 5
 
 
 - INSERT WRITEUP HERE
 
-# ----------------------------------------------------------------------------------------
+# -------------------------------------------------------
 
 # Part 4. Select Models
 
