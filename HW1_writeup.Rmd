@@ -1,6 +1,7 @@
 ---
-title: "Data 621 Homework 1: Moneyball"
-author: "Critical Thinking Group 2 - Armenoush Aslanian-Persico, James Topor, Jeff Nieman, Scott Karr"
+title: 'Data 621 Homework 1: Moneyball'
+author: Critical Thinking Group 2 - Armenoush Aslanian-Persico, James Topor, Jeff
+  Nieman, Scott Karr
 output:
   html_document:
     highlight: pygments
@@ -30,6 +31,7 @@ round(mb_cor, 3)
 library(knitr)
 ```
 
+__--------------------------------------------------------------------------------------------------------------------------__
 
 # Part 1: Data Exploration
 
@@ -44,6 +46,8 @@ Bar Chart or Box Plot of the data
 
 ## Correlation Plot
 Is the data correlated to the target variable (or to other variables?)
+
+__--------------------------------------------------------------------------------------------------------------------------__
 
 #Part 2: Data Preparation
 
@@ -113,6 +117,7 @@ Our Evaluation data set with the NA's filled and outliers removed can be found h
 
 Other *model-specific* data transformations were also used, including use of Box-Cox power transforms and linear combinations of variables. These model-specific transformations are discussed within the individual model writeups provided in __Part 3__.
 
+__--------------------------------------------------------------------------------------------------------------------------__
 
 # Part 3: Build Models
 
@@ -190,7 +195,7 @@ While this model is an improvement over the initial model, we still have compone
 In the other models discussed herein we attempt to address some of the skew issues via various methods, including Box-Cox recommended power transforms and linear combinations of various variables.
 
 
-# -------------------------------------------------------
+__--------------------------------------------------------------------------------------------------------------------------__
 
 ## Model 2 - Total Bases 
 
@@ -281,8 +286,7 @@ Therefore, this model appears to be an improvement over the first TOTAL_BASES mo
 
 The coefficients for TEAM_BATTING_BB, TEAM_BATTING_SO, TEAM_BASERUN_SB, and TOTAL_BASES all make sense intuitively. The TEAM_FIELDING_DP coefficient is less intuitive since one would expect more defensive double plays to improve a team's chances of winning games. However, the variable itself is *negatively* correlated with TARGET_WINS as shown in the __Data Exploration__ section above. As such, we shouldn't be surprised to see a negative coefficient for it here. TEAM_FIELDING_E has changed from negative in the earlier model to positive here. However, this is due to the fact that the coefficient now applies to the *transformed* version of the variable rather than the nominal values of the variable.
 
-
-# -------------------------------------------------------
+__--------------------------------------------------------------------------------------------------------------------------__
 
 ## Model 3 - Total Bases PLUS
 
@@ -346,7 +350,6 @@ Four iterations of p-value / VIF backward selection removed TEAM_PITCHING_H, TEA
 | 12.12 | 0.2944  | 0.2931    | 225.5   | 145
 
 
-
 The coefficients for TEAM_BATTING_SO and TEAM_FIELDING_E make sense intuitively: the more strikeouts a team's offense has, the less likely it is to put the ball in play, and the more fielding errors a team commits, the more likely they are to lose games. The TEAM_FIELDING_DP coefficient is less intuitive since one would expect more defensive double plays to improve a team's chances of winning games. However, the variable itself is *negatively* correlated with TARGET_WINS as shown in the __Data Exploration__ section above. As such, we shouldn't be surprised to see a negative coefficient for it here. Finally, the coefficient for TB_PLUS is postively correlated with the response variable, which shouldn't surprise us since it encapsulates all of a team's offense hits, stolen bases, and bases on balls.
 
 As with the "General Model" and the "Total Bases" model, the diagnostic plots for this model showed a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for the variables TEAM_BATTING_SO and TEAM_FIELDING_E.
@@ -372,7 +375,7 @@ Therefore, this model appears to be an improvement over the first TB_PLUS model 
 
 As we can see, the coefficient for TEAM_FIELDING_E has changed from negative to positive. However, this is due to the fact that the coefficient now applies to the *transformed* version of the variable rather than the nominal values of the variable. The other coefficients remain the same.
 
-# -------------------------------------------------------
+__--------------------------------------------------------------------------------------------------------------------------__
 
 ## Model 4 :Sabermetrics Model
 
@@ -415,8 +418,7 @@ Since BSR is a combination of all of the batting variables, we simply eliminated
 
 The coefficients for this model overall make sense with one exception.  Errors and pitching walks contribute to fewer wins, and stolen bases and the BSR metric have strong influence on increasing wins.  Double plays do habve a slightly negative value, although this could be explained by a team allowing a large number of baserunners.     The positive impact of allowing pitching hits was puzzling.
 
-
-# -------------------------------------------------------
+__--------------------------------------------------------------------------------------------------------------------------__
 
 ## Model 5
 
@@ -442,7 +444,8 @@ Placeholder tables - need to be filled in with ACTUAL metrics for Model 5
 | ----- | ------- | --------- | ------- | -----
 | 11.86 | 0.3168  | 0.3143    | 124.8   | 141
 
-# -------------------------------------------------------
+
+__--------------------------------------------------------------------------------------------------------------------------__
 
 # Part 4. Select Models
 
@@ -464,7 +467,7 @@ Of the five, the General Model had the least favorable residual characteristics,
 
 Of the remaining four models, the Total Bases model was a great improvement over the General Model. However, it too displayed some lack of constant variability of residuals relative to a couple of the predictor variables.
 
-The .... DESCRIBE SCOTT's MODEL HERE...
+The .... __DESCRIBE SCOTT's MODEL HERE__...
 
 Of the remaining two (TB PLUS and Sabermetrics), while the Sabermetrics model yields a slightly large $R^2$ value, the TB Plus model is simpler in that it makes use of only 4 predictor variables while possessing a much larger F-statistic. Such a large difference in F-statistics indicates that the TB Plus model is explaining more of the variability of the training data than is the Sabermetrics model. 
   
