@@ -1,6 +1,6 @@
 ---
 title: "Data 621 Homework 1: Moneyball"
-author: "Critical Thinking Group 2 - Armenoush Aslanian-Persico, james Topor, Jeff Nieman, Scott Karr"
+author: "Critical Thinking Group 2 - Armenoush Aslanian-Persico, James Topor, Jeff Nieman, Scott Karr"
 output:
   html_document:
     highlight: pygments
