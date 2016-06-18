@@ -411,21 +411,35 @@ BSR = A*B/(B+C) +D where:
     
 Since we eliminated the value of TEAM_BATTING_H we simply summed up singles, doubles, triples and home runs in the actual code, and the approach for TEAM_TOTAL_BASES is described in model 2.  The data for BSR exhibit a fairly normal distribution.
 
-- __Insert BSR histogram here??__
+```{r, echo = FALSE, warning=FALSE, message=FALSE, fig.width = 5, fig.height = 4}
+# read clean data set from Github
+
+mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv") 
+mb8 <- mb_clean
+A <- mb8$TEAM_BATTING_1B + mb8$TEAM_BATTING_2B + mb8$TEAM_BATTING_3B + mb8$TEAM_BATTING_BB
+B <- 1.02*(1.4*(mb8$TEAM_BATTING_1B + 2*mb8$TEAM_BATTING_2B + 3*mb8$TEAM_BATTING_3B +  4*mb8$TEAM_BATTING_HR +mb8$TEAM_BATTING_BB)-0.6*(mb8$TEAM_BATTING_1B + mb8$TEAM_BATTING_2B + mb8$TEAM_BATTING_3B + mb8$TEAM_BATTING_HR)-3*mb8$TEAM_BATTING_HR +0.1*mb8$TEAM_BATTING_BB)
+C <- 3*(mb8$TEAM_BATTING_1B + mb8$TEAM_BATTING_2B + mb8$TEAM_BATTING_3B + mb8$TEAM_BATTING_HR)
+D <- mb8$TEAM_BATTING_HR
+
+mb8$BSR <- (A*B)/(B+C) + D
+hist(mb8$BSR, xlab="Base Runs", main="Histogram for BSR")
+
+```
+
 
 Since BSR is a combination of all of the batting variables, we simply eliminated them and created a very strong model on the first iteration.  All p-values were very low, and the variation are all below 5 showing no probems with collinearity.  The characteristic equation indicated by the model is as follows:
 
 
 | Coefficient   | Variable  
 | ------------  | ------------
-| 40.689953     | Intercept 
-| + 0.062185    | BSR
-| - 0.116618    | TEAM_FIELDING_DP
-| - 0.058867    | TEAM_FIELDING_E
-| + 0.60318     | TEAM_BASERUN_SB
-| - 0.011451    | TEAM_PITCHING_SO
-| + 0.019421    | TEAM_PITCHING_H
-| - 0.017615    | TEAM_PITCHING_BB
+| 40.687320     | Intercept 
+| + 0.062189    | BSR
+| - 0.116615    | TEAM_FIELDING_DP
+| - 0.058885    | TEAM_FIELDING_E
+| + 0.060347    | TEAM_BASERUN_SB
+| - 0.011457    | TEAM_PITCHING_SO
+| + 0.019419    | TEAM_PITCHING_H
+| - 0.017603    | TEAM_PITCHING_BB
 
 
 | RSE   | R^2     | Adj. R^2  | F Stat. | MSE
@@ -567,4 +581,6 @@ Sheather, Simon J. A Modern Approach to Regression with R. New York, NY: Springe
 http://www.baseball-almanac.com/  
 
 https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1
+
+http://tangotiger.net/wiki_archive/Base_Runs.html
 
