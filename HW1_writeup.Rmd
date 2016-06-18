@@ -567,15 +567,15 @@ __------------------------------------------------------------------------------
 # Part 5. References
 
 ## Bibliography
-Diez, D.M., Barr, C.D., & Cetinkaya-Rundel, M. (2015). OpenIntro Statistics (3rd Ed).
+Diez, D.M., Barr, C.D., & Cetinkaya-Rundel, M. (2015). OpenIntro Statistics, Third Edition.  Open Source. Print
 
-Faraway, J. J. (2015). Extending linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC.
+Faraway, J. J. (2015). Extending linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC. Print
 
-Faraway, J. J. (2015). Linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC.
+Faraway, J. J. (2015). Linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC. Print
 
-Fox, John, and John Fox. Applied Regression Analysis and Generalized Linear Models. Los Angeles: Sage, 2008. Print.
+Fox, John (2016). Applied Regression Analysis and Generalized Linear Models, Third Edition. Los Angeles: Sage. Print.
 
-Sheather, Simon J. A Modern Approach to Regression with R. New York, NY: Springer, 2009. Internet resource. 
+Sheather, Simon J. (2009). A Modern Approach to Regression with R. New York, NY: Springer. Print
 
 ## Resource Links
 http://www.baseball-almanac.com/  
