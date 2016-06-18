@@ -36,9 +36,9 @@ __------------------------------------------------------------------------------
 # Part 1: Data Exploration
 
 ## Data Summary 
-The original training set data provided included 17 attributes with 2277 observations.  
 
-TRAINING DATASET:  Descriptive Statistics Prior to "cleaning" data
+The original Training data set is comprised of 17 elements and 2277 total observations.  Of those 17 elements, INDEX is simply an index value used for sorting while TARGET_WINS represents the response variable we are to use within our regression models. The remaining 15 elements are all potential predictor variables for our linear models. A summary table for the data set is provided below.
+
 
 |variables       | n     | mean | sd   | med  | min  | max   | range |  skew | kurtosis | se    | NAs
 |--------------  | ----- | ---- | ---- | ---- | ---- | ----- | ----- | ----- | -------  | ----- | ---
@@ -100,7 +100,7 @@ We built regression imputation models for the variables listed below. Each model
 
 The variables we built imputation regression models for are described below. The R code for each of the regression models is contained in the Appendix.
 
-1. __TEAM_BATTING_SO__: The adjusted $R^2$ value for this regression model was 0.7223 and, after populating the NA's using the imputed values, yielded a distribution that matched that of the variable prior to the NA's being filled. For this variable we imputed a total of 102 missing values via regression.
+1. __TEAM_BATTING_SO__: The adjusted $R^2$ value for this regression model was 0.7223 and, after populating the NA's using the imputed values, yielded a distribution that matched that of the variable prior to the NA's being filled. For this variable we imputed a total of 131 missing values via regression.
 
 2. __TEAM_PITCHING_SO__: The adjusted $R^2$ value for this regression model was 0.9952. A total of 102 missing values were imputed via regression for this variable.
 
@@ -142,7 +142,7 @@ __------------------------------------------------------------------------------
 
 # Part 3: Build Models
 
-## Model 1 - General Model Using Backward Selection
+## Model 1:  General Model Using Backward Selection
 
 This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
 
@@ -218,15 +218,15 @@ In the other models discussed herein we attempt to address some of the skew issu
 
 __--------------------------------------------------------------------------------------------------------------------------__
 
-## Model 2 - Total Bases 
+## Model 2: Total Bases 
 
 This model attempts to address some of the lack of constant variability found in the "General Model" discussed above by employing a linear combination of four of the predictor variables to calculate the baseball statistc known as "Total Bases". Total Bases is calculated using what our data set refers to as "TEAM_BATTING" variables as follows:
 
 - Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs)
 
-Inclusion of this new variable allows us to eliminate the four component variables from the model. In fact, the TOTAL_BASES variable appears to be normally distributed, thereby negating the skew issues that were evident with its component variables.
+Inclusion of this new variable allows us to eliminate the four component variables from the model. In fact, the TOTAL_BASES variable appears to be nearly normally distributed, thereby negating the skew issues that were evident with its component variables.
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE}
+```{r, echo = FALSE, warning=FALSE, message=FALSE, fig.width = 5, fig.height = 4}
 # read clean data set from Github
 
 mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv")  
@@ -238,12 +238,9 @@ mb_t$TB_ <- mb_clean$TEAM_BATTING_1B + (2 * mb_clean$TEAM_BATTING_2B) +
                        (3 * mb_clean$TEAM_BATTING_3B) + (4 * mb_clean$TEAM_BATTING_HR)
 
 # set smaller margins to reduce size of histogram
-par(mai=c(.5,.5,.5,.5))
 par(mfrow = c(1, 1))
 hist(mb_t$TB, breaks = 200, main = "Distribution of TOTAL_BASES Variable", xlab = "TOTAL_BASES")
 
-# set margins back to default
-par(mai=c(1.02,0.82,0.82,0.42))
 rm(mb_clean)
 rm(mb_t)
 
@@ -309,7 +306,7 @@ The coefficients for TEAM_BATTING_BB, TEAM_BATTING_SO, TEAM_BASERUN_SB, and TOTA
 
 __--------------------------------------------------------------------------------------------------------------------------__
 
-## Model 3 - Total Bases PLUS
+## Model 3: Total Bases PLUS
 
 This model attempts to improve upon the results of the "Total Bases" model by extending the TOTAL_BASES variable to include the TEAM_BATTING_BB and TEAM_BASERUN_SB variables. The logic behind adding these two variables to the TOTAL_BASES variable comes from the fact that both, like the component variables of TOTAL_BASES, represent basepath advancements by a team's offense.
 
@@ -317,10 +314,10 @@ This model attempts to improve upon the results of the "Total Bases" model by ex
 
 - Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs) + BB + SB  
 
-Inclusion of this new variable allows us to eliminate the two additional component variables from the model. In fact, the TB_PLUS variable, like the TOTAL_BASES variable used earlier appears to be normally distributed, thereby negating the skew issues that were evident with its component variables. A histogram of the distribution of the derived TB_PLUS variable is shown below:
+Inclusion of this new variable allows us to eliminate the two additional component variables from the model. In fact, the TB_PLUS variable, like the TOTAL_BASES variable used earlier appears to be nearly normally distributed, thereby negating the skew issues that were evident with its component variables. A histogram of the distribution of the derived TB_PLUS variable is shown below:
 
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE}
+```{r, echo = FALSE, warning=FALSE, message=FALSE, fig.width = 5, fig.height = 4}
 # read clean data set from Github
 
 mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv")  
@@ -398,7 +395,7 @@ As we can see, the coefficient for TEAM_FIELDING_E has changed from negative to 
 
 __--------------------------------------------------------------------------------------------------------------------------__
 
-## Model 4 :Sabermetrics Model
+## Model 4: Sabermetrics Model
 
 Sabermetrics has become the rage in baseball, actually popularized by Billy Beane and the data set we are exploring.  As a result of this, we built a model that centers around one of these advance analyticsm known as BsR or base runs. This statistic was designed by David Smyth in the 1990's and estimates the amount of runs a team SHOULD score, which made a unique approach as the data set provided did not include runs (see http://tangotiger.net/wiki_archive/Base_Runs.html for more information). The formula is as follows:  
 
@@ -441,29 +438,68 @@ The coefficients for this model overall make sense with one exception.  Errors a
 
 __--------------------------------------------------------------------------------------------------------------------------__
 
-## Model 5
+## Model 5: Box-Cox First
 
+This model first applied transformations to a simple regression of each predictor against wins and showed improvements in the normality of the distribution and more uniformly distributed residuals. In each case a Box-Cox transformation was applied to improve the skewness of predictor variables prior to becoming candidates for the multi-regression model.
 
-- INSERT WRITEUP HERE
+The model then applied a simple Forward Selection strategy, adding variables two-at-a-time until none can be found that improve the model as measured by adjusted $R^2$. 
 
-Placeholder tables - need to be filled in with ACTUAL metrics for Model 5
+Pre-model transformation of individual predicotor variables were as follows:
+
+- TEAM_PITCHING_BB  (boxcox-transform) $\lambda$  =>  y^(1/6)
+- TEAM_BATTING_1B   (derived variable) => TEAM_BATTING_H - TEAM_BATTING_2B - TEAM_BATTING_3B - TEAM_BATTING_HR,   (boxcox-transform) $\lambda$  =>  1/(y^2) 
+- SLUGGING          (derived variable) => 2 * TEAM_BATTING_3B + TEAM_BATTING_HR y^(3/5)
+- TEAM_BATTING_SB   (boxcox-transform) $\lambda$  =>  y^(-1/25)  
+- FIELDING YIELD    (derived variable) => TEAM_FIELDING_E + TEAM_FIELDING_DP  y^(-(9/10))
+- TEAM_PITCHING_SO  (boxcox-transform) $\lambda$ (y^2/3)
+
+SLUGGING & FIELDING YIELD predictors where derived because the underlying variables lacked enough of a normal distribution and residual uniformity to be added to the multi-linear model on their own.  These problems were greatly reduced after applying the derivation and Box-Cox transformation.
+
+The Forward Selection method was applied through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
+
+Steps were as follows:
+
+  * Start with p.Hits & p.Walks
+  * Added b.Singles & b.Slugging
+  * Added Stolen Bases and Fielding
+  * Removed p.Hits
+  * Added b.Walks and p.Strikeouts
+  * Remove b.Walks
+
+Six iterations of p-value / VIF bacward selection removed TEAM_PITCHING_H, TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations.
+
+The diagnostic plots of that model show relatively good linearity between the response variable TARGET_WINS and the 6 predictor variable as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of relatively uniform variability for each variable except the derived predictor FIELDING which has two clusters.  
+
+Note that by combining TEAM_FIELDING_DP and TEAM_FIELDING_E into FIELDING using a Box-Cox transform $\lambda$  =>  1/(y^2) on the derived field prior to adding FIELDING to the model, variablity was somewhat improved and the clustering effect was somewhat mitigated.
+
+Pre-model transformation of individual predicotor variables were then adjusted as follows:
+
+- TEAM_PITCHING_BB  
+- TEAM_BATTING_1B   (derived variable) => TEAM_BATTING_H - TEAM_BATTING_2B - TEAM_BATTING_3B - TEAM_BATTING_HR  
+- SLUGGING          (derived variable) 
+- TEAM_BATTING_SB   
+- FIELDING YIELD    (derived variable) => TEAM_FIELDING_E + TEAM_FIELDING_DP  
+- TEAM_PITCHING_SO
 
 | Coefficient   | Variable  
 | ------------  | ------------
-| 52.88         | Intercept 
-| + 0.168       | TEAM_BATTING_3B
-| + 0.096       | TEAM_BATTING_HR
-| + 0.027       | TEAM_BATTING_BB
-| - 0.027       | TEAM_BATTING_SO
-| + 0.034       | TEAM_BASERUN_SB
-| + 0.004       | TEAM_PITCHING_H
-| + 3252.31     | 1/TEAM_FIELDING_E
-| - 0.102       | TEAM_FIELDING_DP
+|    78.730     | Intercept 
+| +  28.760     | 1/(TEAM_PITCHING_BB^6)
+| -  21.360     | 1/(TEAM_BATTING_1B^2)
+| +   1.450     | (SLUGGING^3) / (SLUGGING^5)
+| - 125.800     | 1/(TEAM_BATTING_SB^25)
+| +   3.747e6   | (FIELDING^10) / (FIELDING^9)
+| -   .1037     | (TEAM_PITCHING_SO^2) / (TEAM_PITCHING_SO^3)
 
 
 | RSE   | R^2     | Adj. R^2  | F Stat. | MSE
 | ----- | ------- | --------- | ------- | -----
-| 11.86 | 0.3168  | 0.3143    | 124.8   | 141
+| 11.97 | 0.3142  | 0.3123    | 164.2   | 143
+
+The coefficients for this model are counterintuitive largely due to the transformations applied to each predictor variable.  For example, one would think TEAM_BATTING_1B would nominally correlate postively with winning, yet its coefficent is strongly negative.  The same is true of TEAM_BATTING_SB and FIELDING.
+
+The sign and magnitude of each coefficient is the result of the transformations as well as the linear model, so it appears that reading the coeffiecients becomes less intuitively tied to the linear relationship between predictors and variables as the extent of transformations increase.  This does not invalidate the model, it simply means the coefficents become less useful as a check of the model's fidelity.
+
 
 
 __--------------------------------------------------------------------------------------------------------------------------__
@@ -473,13 +509,13 @@ __------------------------------------------------------------------------------
 The chart below summarizes the model statistics for all five of our models. The models are listed from left to right in accordance with the order in which they were described in __Part 3__ herein (Models 1-5). Please refer to the Appendix for detailed descriptions, diagnostic plots, and procedural details on the derivation of each of these models.
 
 
-| Metric    | General Model | Total Bases | TB PLUS | Sabermetrics  | Model 5  
+| Metric    | General Model | Total Bases | TB PLUS | Sabermetrics  | Box-Cox First  
 | --------- | ------------- | ----------- | ------- | ------------- | -------  
-| RSE       | 11.86         | 11.97       | 12.12   | 11.99         | 0 
-| R^2       | 0.3168        | 0.3048      | 0.2994  | 0.3229        | 0
-| Adj. R^2  | 0.3143        | 0.3029      | 0.2931  | 0.3207        | 0
-| F Stat.   | 124.8         | 157.5       | 224.3   | 147.4         | 0 
-| MSE       | 141           | 143         | 147     | 144           | 0 
+| RSE       | 11.86         | 11.97       | 12.12   | 11.99         | 11.97 
+| R^2       | 0.3168        | 0.3048      | 0.2994  | 0.3229        | 0.3142
+| Adj. R^2  | 0.3143        | 0.3029      | 0.2931  | 0.3207        | 0.3123
+| F Stat.   | 124.8         | 157.5       | 224.3   | 147.4         | 164.2
+| MSE       | 141           | 143         | 147     | 144           | 143 
 
 
 Each of our five models converged on similar $R^2$ values, RSE's, and MSE's, and all yielded residuals that were distributed normally without signficant evidence of highly leveraged outliers.  No signficant collinearity exists within any of the five models for any of their component predictor variables. 
@@ -488,7 +524,7 @@ Of the five, the General Model had the least favorable residual characteristics,
 
 Of the remaining four models, the Total Bases model was a great improvement over the General Model. However, it too displayed some lack of constant variability of residuals relative to a couple of the predictor variables.
 
-The .... __DESCRIBE SCOTT's MODEL HERE__...
+The Box-Cox First model makes use of a recommended Box-Cox transform for each individual predictor variable before the linear model is constructed via forward selection. While this model yielded results similar to the others, it was deemed to be overly complex both for the number of variables that comprised the model and the difficulty we would have explaining the predictor coefficients.
 
 Of the remaining two (TB PLUS and Sabermetrics), while the Sabermetrics model yields a slightly large $R^2$ value, the TB Plus model is simpler in that it makes use of only 4 predictor variables while possessing a much larger F-statistic. Such a large difference in F-statistics indicates that the TB Plus model is explaining more of the variability of the training data than is the Sabermetrics model. 
   
@@ -511,3 +547,24 @@ rm(eval.w)
 The full set of predicted TARGET_WINS can be found at the following web link:
 
 https://github.com/spsstudent15/2016-02-621-W1/blob/master/HW1-PRED-EVAL-WINS-ONLY.csv
+
+__--------------------------------------------------------------------------------------------------------------------------__
+
+# Part 5. References
+
+## Bibliography
+Diez, D.M., Barr, C.D., & Cetinkaya-Rundel, M. (2015). OpenIntro Statistics (3rd Ed).
+
+Faraway, J. J. (2015). Extending linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC.
+
+Faraway, J. J. (2015). Linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC.
+
+Fox, John, and John Fox. Applied Regression Analysis and Generalized Linear Models. Los Angeles: Sage, 2008. Print.
+
+Sheather, Simon J. A Modern Approach to Regression with R. New York, NY: Springer, 2009. Internet resource. 
+
+## Resource Links
+http://www.baseball-almanac.com/  
+
+https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1
+
