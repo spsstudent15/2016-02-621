@@ -1,0 +1,126 @@
+---
+title: "DATA 621 HW1 Group 2 Best and Final Linear Model"
+author: "James Topor"
+date: "June 17, 2016"
+output: html_document
+---
+
+```{r}
+#########################################################################################
+# 
+# This file loads our preferred predictive model (TOTAL BASES PLUS)
+# and uses that model to predict the TARGET_WINS variable of the MLB Evaluation 
+# data set. 
+#
+# When finished, two separate files are written to a local hard disk directory:
+#
+# - one containing the entire EVALUATION data set after the TARGET_WINS variable has
+#   been updated with the predicted values for each record;
+#
+# - one containing ONLY the INDEX and TARGET_WINS variables from the EVALUATION data set
+#
+# - NO screen output is generated at all by this code
+#
+#########################################################################################
+
+# --------------------------------------------------------------
+# read clean data set from Github
+
+mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv")  
+
+# ---------------------------------------------------------------
+
+# Build a model with Total Bases + SB + BB added and all of the other hitting vars removed
+
+# create new variable and drop its components
+mb_t <- mb_clean
+
+mb_t$TB_PLUS <- mb_clean$TEAM_BATTING_1B + (2 * mb_clean$TEAM_BATTING_2B) + 
+                       (3 * mb_clean$TEAM_BATTING_3B) + (4 * mb_clean$TEAM_BATTING_HR) + 
+                       mb_clean$TEAM_BATTING_BB + mb_clean$TEAM_BASERUN_SB
+
+# par(mfrow = c(1,1))
+# hist(mb_t$TB_PLUS, breaks = 200)
+
+# now drop 1B, 2B, 3B, HR, BB, SB
+mb_tbp <- mb_t[,c(1, 2, 7, 9, 10, 11, 12, 13, 15)]
+
+
+# -----------------------------------------------------------------------------------------
+
+# REMOVE OUTLIERS AND REFIT
+
+# Per Cooks Distance, remove items 836, 821, 1920, 1737, 1515
+
+
+############ FIRST SET OF OUTLIERS ######################
+# drop outlier records from data set
+mb_rem <- mb_tbp[-c(836, 821, 1920, 1737, 1515),]
+
+# save first data set
+mb_tbp_orig <- mb_tbp
+
+# renumber rows
+rownames(mb_rem) <- 1:nrow(mb_rem)
+
+# keep the clean data set pure
+mb_tbp <- mb_rem
+
+# -------------------------------------------------------------------------------------------
+
+## Now try same model but with FIELD_E transformed using Box-Cox
+
+# TEAM_FIELDING_E: Box-cox says -1 power transform => 1/y 
+
+mb_tbp$TEAM_FIELDING_E <- 1/mb_tbp$TEAM_FIELDING_E
+
+# Now refit first model from above: Start with all variables
+model.4 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_BB - TEAM_PITCHING_H - TEAM_PITCHING_SO)
+
+# summary(model.4)
+```
+
+```{r}
+# Now load evaluation data set and predict TARGET WINS
+
+# load EVAL data set
+eval.d <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-EvalData-.csv") 
+
+# save original data
+eval.2 <- eval.d
+
+# creaet TB_PLUS and drop component variables
+eval.2$TB_PLUS <- eval.2$TEAM_BATTING_1B + (2 * eval.2$TEAM_BATTING_2B) + 
+                       (3 * eval.2$TEAM_BATTING_3B) + (4 * eval.2$TEAM_BATTING_HR) + 
+                       eval.2$TEAM_BATTING_BB + eval.2$TEAM_BASERUN_SB
+
+# par(mfrow = c(1,1))
+# hist(eval.d$TB_PLUS, breaks = 30)
+
+# now drop 1B, 2B, 3B, HR, BB, SB
+eval.2 <- eval.2[,c(1, 6, 8, 9, 10, 11, 12, 14, 15)]
+
+# transform TEAM_FIELDING_E using 1/y
+eval.2$TEAM_FIELDING_E <- 1/eval.2$TEAM_FIELDING_E
+
+
+# now predict TARGET_WINS using model.4
+pred.TW <- round(predict(model.4, eval.2))
+
+# add predicted variables to TARGET_WINS variable
+eval.2$TARGET_WINS <- pred.TW
+
+# write entire updated EVAL data set to a CSV
+write.csv(eval.2, file = "C:/SQLData/HW1-PRED-EVAL-ALLDATA.csv", row.names = FALSE)
+
+# now write just INDEX and TARGET_WINS to a separate file
+eval.3 <- eval.2[,c(1,8)]
+
+write.csv(eval.3, file = "C:/SQLData/HW1-PRED-EVAL-WINS-ONLY.csv", row.names = FALSE)
+
+```
+
+```{r}
+# clean up objects in memory
+rm(list = ls())
+```
