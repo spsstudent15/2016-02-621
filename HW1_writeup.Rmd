@@ -397,7 +397,7 @@ __------------------------------------------------------------------------------
 
 ## Model 4: Sabermetrics Model
 
-Sabermetrics has become the rage in baseball, actually popularized by Billy Beane and the data set we are exploring.  As a result of this, we built a model that centers around one of these advance analyticsm known as BsR or base runs. This statistic was designed by David Smyth in the 1990's and estimates the amount of runs a team SHOULD score, which made a unique approach as the data set provided did not include runs (see http://tangotiger.net/wiki_archive/Base_Runs.html for more information). The formula is as follows:  
+Sabermetrics has become the rage in baseball, actually popularized by Billy Beane and the data set we are exploring.  As a result of this, we built a model that centers around one of these advance analytics known as BsR or base runs. This statistic was designed by David Smyth in the 1990's and estimates the amount of runs a team SHOULD score, which made a unique approach as the data set provided did not include runs (see http://tangotiger.net/wiki_archive/Base_Runs.html for more information). The formula is as follows:  
 
 BSR = A*B/(B+C) +D where:  
 
@@ -434,7 +434,7 @@ Since BSR is a combination of all of the batting variables, we simply eliminated
 
 
 
-The coefficients for this model overall make sense with one exception.  Errors and pitching walks contribute to fewer wins, and stolen bases and the BSR metric have strong influence on increasing wins.  Double plays do habve a slightly negative value, although this could be explained by a team allowing a large number of baserunners.     The positive impact of allowing pitching hits was puzzling.
+The coefficients for this model overall do make sense.  Errors and pitching walks contribute to fewer wins, and stolen bases and the BSR metric have strong influence on increasing wins.  Double plays do have a slightly negative value, although this could be explained by a team allowing a large number of baserunners, and in anay case this matches the relationship of the data when you compare against target wins. The positive impact of allowing pitching hits was puzzling, but once again it agrees with the trends we see in the data provided.
 
 __--------------------------------------------------------------------------------------------------------------------------__
 
