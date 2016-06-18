@@ -367,7 +367,7 @@ mb5 <- mb4
 # fixed error in this line: dataframe in 'which' call was mb1 so changed to mb5
 mb5 <- mb5[which(mb5$TEAM_PITCHING_SO < 1450),]
 
-eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_SO < 1450),]
+# eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_SO < 1450),]
 
 # check rowcount
 nrow(mb5)
@@ -378,7 +378,7 @@ nrow(eval_data.4)
 mb6 <- mb5
 mb6 <- mb6[which(mb6$TEAM_PITCHING_H < 3001),]
 
-eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_H < 3001),]
+# eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_H < 3001),]
 
 # check rowcount
 nrow(mb6)
@@ -389,7 +389,7 @@ nrow(eval_data.4)
 mb7 <- mb6
 mb7 <- mb7[which(mb7$TEAM_FIELDING_E < 1047),]
 
-eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_FIELDING_E < 1047),]
+# eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_FIELDING_E < 1047),]
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
