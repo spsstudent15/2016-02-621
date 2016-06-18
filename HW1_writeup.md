@@ -96,21 +96,6 @@ Simply removing the *TEAM_BATTING_1B* variable yielded a model with all p-values
 
 The final model of that iteration of the linear modeling process showed clear evidence of a number of outliers as evidenced in R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model, which varies from the inital iteration in that it includes *TEAM_BATTING_2B* due to the fact that removing the outliers improved the statistical significance of the variable :
 
-TARGET_WINS = 66.261 - (0.017 * TEAM_BATTING_2B)  
-                     + (0.150 * TEAM_BATTING_3B)   
-                     + (0.109 * TEAM_BATTING_HR)  
-                     + (0.022 * TEAM_BATTING_BB)  
-                     - (0.019 * TEAM_BATTING_SO)  
-                     + (0.065 * TEAM_BASERUN_SB)  
-                     + (0.016 * TEAM_PITCHING_H)  
-                     - (0.075 * TEAM_FIELDING_E)  
-                     - (0.109 * TEAM_FIELDING_DP)  
-
-RSE =       11.49  on 2152 deg. of freedom  
-R^2 =       0.3598  
-Adj. R^2 =  0.3572  
-F Stat. =   134.4  
-MSE =       132  
 
 | Coefficient   | Variable  
 | ------------  | ------------
@@ -170,11 +155,11 @@ In the other models discussed herein we attempt to address some of the skew issu
 
 This model attempts to address some of the lack of constant variability found in the "General Model" discussed above by employing a linear combination of four of the predictor variables to calculate the baseball statistc known as "Total Bases". Total Bases is calculated using what our data set refers to as "TEAM_BATTING" variables as follows:
 
-Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs)
+- Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs)
 
 Inclusion of this new variable allows us to eliminate the four component variables from the model. In fact, the TOTAL_BASES variable appears to be normally distributed, thereby negating the skew issues that were evident with its component variables.
 
-- INSERT HISTOGRAM of TOTAL_BASES HERE???
+![](HW1_writeup_files/figure-html/unnamed-chunk-4-1.png)
 
 This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
 
@@ -243,11 +228,12 @@ This model attempts to improve upon the results of the "Total Bases" model by ex
 
 "Total Bases Plus"" (referred to as TB_PLUS hereon) is calculated using what our data set refers to as "TEAM_BATTING" and "TEAM_BASERUN" variables as follows:
 
-Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs) + BB + SB  
+- Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs) + BB + SB  
 
-Inclusion of this new variable allows us to eliminate the two additional component variables from the model. In fact, the TB_PLUS variable, like the TOTAL_BASES variable used earlier appears to be normally distributed, thereby negating the skew issues that were evident with its component variables.
+Inclusion of this new variable allows us to eliminate the two additional component variables from the model. In fact, the TB_PLUS variable, like the TOTAL_BASES variable used earlier appears to be normally distributed, thereby negating the skew issues that were evident with its component variables. A histogram of the distribution of the derived TB_PLUS variable is shown below:
 
-- INSERT HISTOGRAM of TB_PLUS HERE???
+
+![](HW1_writeup_files/figure-html/unnamed-chunk-5-1.png)
 
 This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
 
@@ -306,17 +292,21 @@ As we can see, the coefficient for TEAM_FIELDING_E has changed from negative to 
 
 ## Model 4 :Sabermetrics Model
 
-Sabermetrics has become the rage in baseball, actually popularized by Billy Beane and the data set we are exploring.  As a result of this, we built a model that centers around one of these advance analyticsm known as BsR or base runs. This statistic was designed by David Smyth and estimates the amount of runs a team SHOULD score, which made a unique approach as the data set provided did not include runs. The formula is as follows:
+Sabermetrics has become the rage in baseball, actually popularized by Billy Beane and the data set we are exploring.  As a result of this, we built a model that centers around one of these advance analyticsm known as BsR or base runs. This statistic was designed by David Smyth and estimates the amount of runs a team SHOULD score, which made a unique approach as the data set provided did not include runs. The formula is as follows:  
 
-BSR = A*B/(B+C) +D where:
-     A = TEAM_BATTING_1B + TEAM_BATTING_2B + TEAM_BATTING_3B + TEAM_BATTING_BB
-     B = 1.02*(1.4*TEAM_TOTAL_BASES -0.6*TEAM_BATTING_H + 0.1*TEAM_BATTING_BB)
-     C = AT BATS - TEAM_BATTING_H (which we approximated with 3*TEAM_BATTING_H as the average batting average is around 0.250)
-     D = TEAM_BATTING_HR
+BSR = A*B/(B+C) +D where:  
+
+- A = TEAM_BATTING_1B + TEAM_BATTING_2B + TEAM_BATTING_3B + TEAM_BATTING_BB  
+
+- B = 1.02*(1.4*TEAM_TOTAL_BASES -0.6*TEAM_BATTING_H + 0.1*TEAM_BATTING_BB)  
+
+- C = AT BATS - TEAM_BATTING_H (which we approximated with 3*TEAM_BATTING_H as the average batting average is around 0.250)  
+
+- D = TEAM_BATTING_HR  
     
 Since we eliminated the value of TEAM_BATTING_H we simply summed up singles, doubles, triples and home runs in the actual code, and the approach for TEAM_TOTAL_BASES is described in model 2.  The data for BSR exhibit a fairly normal distribution.
 
-Insert BSR histogram here??
+- Insert BSR histogram here??
 
 Since BSR is a combination of all of the batting variables, we simply eliminated them and created a very strong model on the first iteration.  All p-values were very low, and the variation are all below 5 showing no probems with collinearity.  The characteristic equation indicated by the model is as follows:
 
