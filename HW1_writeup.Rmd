@@ -12,21 +12,6 @@ output:
   word_document: default
 ---
 
-```{r, eval=FALSE, include=FALSE, echo=FALSE}
-BB.list <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/moneyball-training-data.csv", header=TRUE,
-    stringsAsFactors=FALSE, sep=",")
-attach(BB.list)
-
-# describe structure of dataset
-str(BB.list)
-
-# plot(BB.list[,3:17])
-
-mb_cor <- cor(BB.list[,3:17])
-
-round(mb_cor, 3)
-```
-
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
 library(knitr)
 ```
@@ -90,6 +75,9 @@ The results of our data exploration efforts led us to drop three other variables
 
 3. __TEAM_PITCHING_HR__: This variable is 97% correlated with TEAM_BATTING_HR. In fact, 815 cases (more than 35% of our total cases) have *IDENTICAL* values for pitched and batted HR's.  This high degree of correlation may be due to the time series nature of the data: as baseball evolved, more home runs were hit, which naturally causes the number of pitched home runs to increase. The statistics are basically opposite sides of the same coin to a large degree (even if there may be some variability between individual teams in any given year). The fact that these two variables are nearly perfectly correlated indicates that one of them can legitimately be removed from the data set, and we chose __TEAM_PITCHING_HR__ since we believe the batting HR metric will be more predictive of TARGET_WINS than will the pitching HR statistic.
 
+These same three variables were subsequently removed from the Evaluation data set to ensure compatibility with our linear models. 
+
+
 ## Imputation of Missing Values (NA's)
 
 ### Filling Missing values in the Training Data Set
@@ -112,9 +100,7 @@ The variables we built imputation regression models for are described below. The
 
 These four imputation regression models were then used to populate missing values for the same variables within the evaluation data set. Clearly, any models we might have constructed for purposes of predicting WINS for the evaluation set would have failed to work on any records within that data set that contained NA's. Applying the imputation models to the evaluation data allows us to avoid that problem.
 
-## Removal of Extreme Outliers From Data Sets
-
-### Extreme Outlier Removal: Training Data
+## Removal of Extreme Outliers From the Training Data Set
 
 We completed our data preparation efforts by eliminating some clearly egregious outliers identified via research through *baseball-almanac.com*. This approach is suggested by Sheather (p. 57).  For example, the record for the most pitching strikeouts in a single season is 1450 by the 2014 Cleveland Indians. Therefore we know that any records having TEAM_PITCHING_SO values above that point is an aberration, and any records containing such values were summarily removed from the data set. 
 
@@ -124,13 +110,13 @@ The TEAM_PITCHING_H variable also appeared to have numerous egregious outliers. 
 
 Removing the egregious outliers resulting in a sum total of 104 records being removed from the training data set. Removal of these outliers helped to normalize our data and thereby improve the expected performance of our linear models.
 
-### Extreme Outlier Removal: Evaluation Data
+## Results of Imputation for Missing Values and Outlier Removal Process
 
-Similar extreme outliers were subsequently removed from the evaluation data set since it is unlikely that any regression models we might have built would have generated realistic predictive results for records containing such outliers. Of the 259 records contained in the evaluation data set, a total of 11 were removed by this process. 
+Our training data set with the NA's filled and the outliers removed can be found here:
 
-__*As such, our Evaluation data set is comprised of a total of 248 records rather than the 259 records provided in the original data*__.
+https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-Data.csv
 
-Our Evaluation data set with the NA's filled and outliers removed can be found here:
+Our Evaluation data set with the NA's filled can be found here:
 
 https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-EvalData-.csv
 
