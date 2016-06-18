@@ -398,11 +398,11 @@ Since BSR is a combination of all of the batting variables, we simply eliminated
 
 | RSE   | R^2     | Adj. R^2  | F Stat. | MSE
 | ----- | ------- | --------- | ------- | -----
-| 11.99 | 0.3229  | 0.3207    | 147.4   | 143.7
+| 11.99 | 0.3229  | 0.3207    | 147.4   | 144
 
 
 
-The coefficients for this model overall madke a lot of sense.  Errors and pitching walks contribute to fewer wins, and stolen bases and the BSR metric have strong influence on increasing wins.  Double plays do habve a slightly negative value, although this could be explained by a team allowing a large number of baserunners.     The positive impact of allowing pitching hits was puzzling.
+The coefficients for this model overall make sense with one exception.  Errors and pitching walks contribute to fewer wins, and stolen bases and the BSR metric have strong influence on increasing wins.  Double plays do habve a slightly negative value, although this could be explained by a team allowing a large number of baserunners.     The positive impact of allowing pitching hits was puzzling.
 
 
 # -------------------------------------------------------
@@ -444,7 +444,7 @@ The chart below summarizes the model statistics for all five of our models:
 | R^2       | 0.3168        | 0.3048      | 0.2994  | 0.3229        | 0
 | Adj. R^2  | 0.3143        | 0.3029      | 0.2931  | 0.3207        | 0
 | F Stat.   | 124.8         | 157.5       | 224.3   | 147.4         | 0 
-| MSE       | 141           | 143         | 147     | 143.7         | 0 
+| MSE       | 141           | 143         | 147     | 144           | 0 
 
 
 As we compared our models, it was clear that the two strongest were the TB_PLUS model (#3) and the sabermetrics model (#4).  Models 1 and 2 were rejected for reasons explained in their respective model descriptions.
