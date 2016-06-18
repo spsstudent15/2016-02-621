@@ -27,7 +27,7 @@ round(mb_cor, 3)
 ```
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
-# library(knitr)
+library(knitr)
 ```
 
 
@@ -104,6 +104,10 @@ Removing the egregious outliers resulting in a sum total of 104 records being re
 Similar extreme outliers were subsequently removed from the evaluation data set since it is unlikely that any regression models we might have built would have generated realistic predictive results for records containing such outliers. Of the 259 records contained in the evaluation data set, a total of 11 were removed by this process. 
 
 __*As such, our Evaluation data set is comprised of a total of 248 records rather than the 259 records provided in the original data*__.
+
+Our Evaluation data set with the NA's filled and outliers removed can be found here:
+
+<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-EvalData-.csv">Clean Eval Data</a>
 
 ## Other Data Prepation Transformations: Refer to Model Descriptions
 
@@ -207,9 +211,13 @@ mb_t <- mb_clean
 mb_t$TB_ <- mb_clean$TEAM_BATTING_1B + (2 * mb_clean$TEAM_BATTING_2B) + 
                        (3 * mb_clean$TEAM_BATTING_3B) + (4 * mb_clean$TEAM_BATTING_HR)
 
-par(mfrow = c(1,1))
+# set smaller margins to reduce size of histogram
+par(mai=c(.5,.5,.5,.5))
+par(mfrow = c(1, 1))
 hist(mb_t$TB, breaks = 200, main = "Distribution of TOTAL_BASES Variable", xlab = "TOTAL_BASES")
 
+# set margins back to default
+par(mai=c(1.02,0.82,0.82,0.42))
 rm(mb_clean)
 rm(mb_t)
 
@@ -438,7 +446,7 @@ Placeholder tables - need to be filled in with ACTUAL metrics for Model 5
 
 # Part 4. Select Models
 
-The chart below summarizes the model statistics for all five of our models:
+The chart below summarizes the model statistics for all five of our models. The models are listed from left to right in accordance with the order in which they were described in __Part 3__ herein (Models 1-5). Please refer to the Appendix for detailed descriptions, diagnostic plots, and procedural details on the derivation of each of these models.
 
 
 | Metric    | General Model | Total Bases | TB PLUS | Sabermetrics  | Model 5  
@@ -450,21 +458,32 @@ The chart below summarizes the model statistics for all five of our models:
 | MSE       | 141           | 143         | 147     | 144           | 0 
 
 
-As we compared our models, it was clear that the two strongest were the TB_PLUS model (#3) and the sabermetrics model (#4).  Models 1 and 2 were rejected for reasons explained in their respective model descriptions.
+Each of our five models converged on similar $R^2$ values, RSE's, and MSE's, and all yielded residuals that were distributed normally without signficant evidence of highly leveraged outliers.  No signficant collinearity exists within any of the five models for any of their component predictor variables. 
 
-Our analysis showed that both model #3 and model #4 seem to have no issues with collinearity.  As the table shows, the decision is not immediately obvious based solely on the model's statistcs, as the sabermetrics model had the better R^2 and RSE values, while the Total Bases model had the better F statistic.  
+Of the five, the General Model had the least favorable residual characteristics, with multiple predictors showing non-constant variability relative to the residuals, while having a relatively low F-statistic when compared to the other models.
 
-While both models obviously reject the null hypothesis, the TB_PLUS model has a much larger F-Statistic value which shows that it is explaining more of the variability of the training data than is the Sabermetrics model. Furthermore, the TB_PLUS model is simpler in that it makes use of only 4 predictor variables and yields favorable diagnostic plots.
+Of the remaining four models, the Total Bases model was a great improvement over the General Model. However, it too displayed some lack of constant variability of residuals relative to a couple of the predictor variables.
 
+The .... DESCRIBE SCOTT's MODEL HERE...
+
+Of the remaining two (TB PLUS and Sabermetrics), while the Sabermetrics model yields a slightly large $R^2$ value, the TB Plus model is simpler in that it makes use of only 4 predictor variables while possessing a much larger F-statistic. Such a large difference in F-statistics indicates that the TB Plus model is explaining more of the variability of the training data than is the Sabermetrics model. 
   
-  
-  
-To test our models, we needed an evaluation data set with NA's imputed. We checked the imputation output to ensure it conformed with the actual distribution of each of the impacted variables in the EVAL set. 
+Therefore, __we selected the TB PLUS model__ as the basis for our prediction of TARGET_WINS for the Evaluation data set. To ensure the model's efficacy when applied to the Evaluation data set, we first applied a set of transformations to that data set that were identical to those applied to the Training data set during the development of the TB PLUS model. The TB PLUS model was then applied to yield a set of INDEX / TARGET_WINS pairs.
 
-The EVAL data set with the NA's filled can be found here:
+Since displaying the full set of predicted values would consume a large number of pages herein, a sample of the first 10 rows of that data set is displayed below:
 
-<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-EvalData-.csv">Clean Eval Data</a>
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
 
-```{r}
+# read clean data set from Github
 
+eval.w <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/HW1-PRED-EVAL-WINS-ONLY.csv")  
+
+# display 10 rows
+kable(head(eval.w, n = 10), alingn = 'l', padding = 0)
+
+rm(eval.w)
 ```
+
+The full set of predicted TARGET_WINS can be found at the following web link:
+
+https://github.com/spsstudent15/2016-02-621-W1/blob/master/HW1-PRED-EVAL-WINS-ONLY.csv
