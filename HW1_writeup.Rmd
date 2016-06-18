@@ -1,6 +1,6 @@
 ---
 title: "Data 621 Homework 1: Moneyball"
-author: "Critical Thinking Group 2"
+author: "Critical Thinking Group 2 - Armenoush Aslanian-Persico, james Topor, Jeff Nieman, Scott Karr"
 output:
   html_document:
     highlight: pygments
@@ -365,7 +365,7 @@ As we can see, the coefficient for TEAM_FIELDING_E has changed from negative to 
 
 ## Model 4 :Sabermetrics Model
 
-Sabermetrics has become the rage in baseball, actually popularized by Billy Beane and the data set we are exploring.  As a result of this, we built a model that centers around one of these advance analyticsm known as BsR or base runs. This statistic was designed by David Smyth and estimates the amount of runs a team SHOULD score, which made a unique approach as the data set provided did not include runs. The formula is as follows:  
+Sabermetrics has become the rage in baseball, actually popularized by Billy Beane and the data set we are exploring.  As a result of this, we built a model that centers around one of these advance analyticsm known as BsR or base runs. This statistic was designed by David Smyth in the 1990's and estimates the amount of runs a team SHOULD score, which made a unique approach as the data set provided did not include runs (see http://tangotiger.net/wiki_archive/Base_Runs.html for more information). The formula is as follows:  
 
 BSR = A*B/(B+C) +D where:  
 
