@@ -29,14 +29,9 @@ round(mb_cor, 3)
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
 # library(knitr)
 ```
-# Overview
 
-In this homework assignment, you will explore, analyze and model a data set containing approximately 2200 records. Each record represents a professional baseball team from the years 1871 to 2006 inclusive. Each record has the performance of the team for the given year, with all of the statistics adjusted to match the performance of a 162 game season. 
 
-Your objective is to build a multiple linear regression model on the training data to predict the number of wins for the team. You can only use the variables given to you (or variables that you derive from the variables
-provided). Below is a short description of the variables of interest in the data set:
-
-# Part 1. Data Exploration
+# Part 1: Data Exploration
 
 ## Data Summary 
 The data base originally sent out has 17 attributes with 2277 lines.
@@ -50,35 +45,53 @@ Bar Chart or Box Plot of the data
 ## Correlation Plot
 Is the data correlated to the target variable (or to other variables?)
 
-#Part 2 - Data Preparation:
-## Missing and Invalid Data
+#Part 2: Data Preparation
 
-We began by creating a new attribute for singles, taking the hits value and subtracting out the doubles, triples and home runs. Then we eliminated the batting hits column. We believe that separating out singles with the other unique hit values will minimize collinearity.
+Our data preparation efforts for the training data set consisted of the creation of one new derived variable, removing four predictor variables, imputing values for the remaining variables that had missing values (NA's), and removal of a relatively small number of records that contained clearly egregious outlier values for particular variables. The results of these efforts were subsequently used as the basis for each of the five different linear models we created and evaluated. 
 
-We followed by excluding 4 data attributes for the purpose of the models which we noticed during the data survey:
+## New Variable Creation
 
-1. Hit by Pitch: In the case of hit by pitch there were very few values present (2085 missing). Based on SME knowledge from actual coaches we discovered that hit by pitches rarely impact wins. Therefore, we chose to exclude it.
+We began our data preparation efforts by creating a new variable TEAM_BATTING_1B which represents offensive single base hits. The variable was created by subtracting out the TEAM_BATTING doubles, triples and home runs from the TEAM_BATTING_H variable. 
 
-2. Caught stealing: In the case of caught stealing there were many missing values as well (772). 
-This attribute was found to be highly collinear with the stolen base attribute (because teams that steal a lot of bases will have more caught stealing). As a result, we chose to exclude this value and kept the positive value of stolen bases which had fewer missing components.
+The TEAM_BATTING_H variable was then dropped from the data set. We believe that separating out singles from the other unique hit values will minimize collinearity.
 
-3. Pitching Home Runs Allowed: These data were also found to be highly collinear with batting homeruns as years with more homeruns hit directly match years with similar amount of homeruns allowed (for example, the years of "juicing" in the 1990's tended to have a lot of homeruns hit and therefore pitched, while the "dead ball years" prior to 1920 had very few hit and allowed). We chose to exclude this attribute and kept the home runs batting value. 
+## Removal of Variables Due to Collinearity and/or Missing Values
 
-4. Index: These numbers were simply sorting keys and offer no real statistical value to the model and were therefore excluded. 
+The results of our data exploration efforts led us to drop three other variables from the data set:
 
-We then worked on imputing the remaining missing data. To do this we used a linear regression approach recommended by Faraway (p.201) and Fox (p.611). We decided against the using the mean or median as a replacement value for NA's since regression yields imputed values that are much more consistent with the actual distribution of the data while introducing much less bias than use of a mean or median would incur.
+1. __TEAM_BATTING_HBP__: The TEAM_BATTING_HBP variable has very little correlation with the TARGET_WINS response variable and also has 2085 missing values out of a total of 2277. Since it would be very difficult to accurately impute such a large proportion of any variable's missing values, we chose to exclude the variable from our analysis.
 
-We built regression imputation models for the following variables. Each model was analyzed to ensure that there were no collinearity issues and all p-values were < $.05$:
+2. __TEAM_BASERUN_CS__: This variable is strongly correlated (65.5%) with the TEAM_BASERUN_SB variable and is the 2nd largest source of NA's in our data set. These combined facts led us to exclude the variable from our analysis.
 
-1. __Batting strikeouts__: The adjusted R squared value for our regression was 0.7223 and the data appeared to be normally distributed. We created a function we called "impute" that allowed us to only replace the values missing with the imputed ones (and for batting strikeouts we imputed 102 values.
+3. __TEAM_PITCHING_HR__: This variable is 97% correlated with TEAM_BATTING_HR. In fact, 815 cases (more than 35% of our total cases) have *IDENTICAL* values for pitched and batted HR's.  This high degree of correlation may be due to the time series nature of the data: as baseball evolved, more home runs were hit, which naturally causes the number of pitched home runs to increase. The statistics are basically opposite sides of the same coin to a large degree (even if there may be some variability between individual teams in any given year). The fact that these two variables are nearly perfectly correlated indicates that one of them can legitimately be removed from the data set, and we chose __TEAM_PITCHING_HR__ since we believe the batting HR metric will be more predictive of TARGET_WINS than will the pitching HR statistic.
 
-2. __Pitching strikeouts__: We achieved a very effective regression model here as the adjusted R squared value was 0.9952. Here again we imputed 102 values in the same rows as the batting strikeouts.
+## Imputation of Missing Values (NA's)
 
-3. __Stolen Bases__: The model here was not quite as strong with an adjusted R squared value of 0.3427. Here we imputed 131 values.
+### Filling Misssing values in the Training Data Set
 
-4. __Double Plays__: The model here had an adjusted R squared value of 0.3904. Here we imputed 286 missing values. 
+We then worked on imputing the remaining missing data. To do this we made use of a linear regression approach recommended by Faraway (p.201) and Fox (p.611). We decided against the using the mean or median as a replacement value for NA's since regression yields imputed values that are much more consistent with the actual distribution of the data while introducing much less potential bias than use of a mean or median would incur.
 
-We completed data preparation for the training data set by eliminating some clearly egregious outliers based on research through baseball-almanac.com. This approach is suggested by Sheather (p. 57).  For exampe, the record for the most pitching strikeouts in a single season is 1450 by the 2014 Cleveland Indians. Therefore we know that any records having TEAM_PITCHING_SO values above that point is an aberration, and any records containing such values were summarily removed from the data set. 
+We built regression imputation models for the following variables. Each model was analyzed to ensure that there were no collinearity issues and all p-values were < $.05$. While we did not not have the time or resources to run a complete cadre of residual diagnostics on these imputation models, we did verify that their results produced imputed distributions of the subject variables that were consistent with those of the original NA-populated data. It is our belief that this consistency indicates that the resulting predicted values for the missing values are better to use than simply filling the NA's with a mean or median.
+
+The variables we built imputation regression models for are described below. The R code for each of the regression models is contained in the Appendix.
+
+1. __TEAM_BATTING_SO__: The adjusted $R^2$ value for this regression model was 0.7223 and, after populating the NA's using the imputed values, yielded a distribution that matched that of the variable prior to the NA's being filled. For this variable we imputed a total of 102 missing values via regression.
+
+2. __TEAM_PITCHING_SO__: The adjusted $R^2$ value for this regression model was 0.9952. A total of 102 missing values were imputed via regression for this variable.
+
+3. __TEAM_BASERUN_SB__: The adjusted $R^2$ value for this regression model was 0.3427. Despite the adjusted $R^2$ being low relative to the models described above, after the model yielded a distribution that matched that of the variable prior to the NA's being filled. A total of 131 missing values were imputed via regression for this variable.
+
+4. __TEAM_FIELDING_DP__: The adjusted $R^2$ for this model was 0.3904. A total of 286 missing values were imputed and the resulting distribution matched that of the variable prior to the NA's being filled. 
+
+### Filling Missing Values in the Evaluation Data Set
+
+These four imputation regression models were then used to populate missing values for the same variables within the evaluation data set. Clearly, any models we might have constructed for purposes of predicting WINS for the evaluation set would have failed to work on any records within that data set that contained NA's. Applying the imputation models to the evaluation data allows us to avoid that problem.
+
+## Removal of Extreme Outliers From Data Sets
+
+### Extreme Outlier Removal: Training Data
+
+We completed our data preparation efforts by eliminating some clearly egregious outliers identified via research through *baseball-almanac.com*. This approach is suggested by Sheather (p. 57).  For example, the record for the most pitching strikeouts in a single season is 1450 by the 2014 Cleveland Indians. Therefore we know that any records having TEAM_PITCHING_SO values above that point is an aberration, and any records containing such values were summarily removed from the data set. 
 
 Similarly, the most errors by team in a single season was 639 by Philadelphia in 1883. Prorating to 162 games we calculated that we should discard any records containing TEAM_FIELDING_E values above 1046. 
 
@@ -86,28 +99,18 @@ The TEAM_PITCHING_H variable also appeared to have numerous egregious outliers. 
 
 Removing the egregious outliers resulting in a sum total of 104 records being removed from the training data set. Removal of these outliers helped to normalize our data and thereby improve the expected performance of our linear models.
 
-# --- needs more editing below here
+### Extreme Outlier Removal: Evaluation Data
 
-For our individual models we did look at combining certain fields or creating some unique attributes from the data fields provided. We also looked at power transformations as well. These model-based transformations will be covered in the individual model section.
+Similar extreme outliers were subsequently removed from the evaluation data set since it is unlikely that any regression models we might have built would have generated realistic predictive results for records containing such outliers. Of the 259 records contained in the evaluation data set, a total of 11 were removed by this process. 
 
-## Addressing Outliers via Cook's Distance
+__*As such, our Evaluation data set is comprised of a total of 248 records rather than the 259 records provided in the original data*__.
 
-A defensible approach, simplistic but valid is just deleting "bad" leverage points or invalid data and refitting the model w/o them. (Sheather MAR pg. 57). If you look at the Residuals vs Leverage plot (Sheather MAR pg. 70) is a good example, these points are outside of the +/- 2 SD --the so called Cook's distance and can be removed.  Its also in the flowchart on pg. 103.  The bonds example in the chapter 3 exercises of MAR have the Cook's Distance test code for the "Bond" example where he throws out 2 of 35 observations due to "bad" leverage.
+## Other Data Prepation Transformations: Refer to Model Descriptions
 
-Here's an extract . . .
-
-Figure 3.13 on page 68
-```{r}
-#cd1 <- cooks.distance(m1)
-#plot(CouponRate,cd1,xlab="Coupon Rate (%)", ylab="Cook's Distance")
-#abline(h=4/(35-2),lty=2)
-#identify(CouponRate,cd1,Case)
-```
+Other *model-specific* data transformations were also used, including use of Box-Cox power transforms and linear combinations of variables. These model-specific transformations are discussed within the individual model writeups provided in __Part 3__.
 
 
-# -------------------------------------------------------
-
-# Part 3. Build Models
+# Part 3: Build Models
 
 ## Model 1 - General Model Using Backward Selection
 
