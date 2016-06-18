@@ -3,12 +3,12 @@ title: 'Data 621 Homework 1: Moneyball'
 author: Critical Thinking Group 2 - Armenoush Aslanian-Persico, James Topor, Jeff
   Nieman, Scott Karr
 output:
+  pdf_document: default
   html_document:
     highlight: pygments
     keep_md: yes
     theme: cerulean
     toc: yes
-  pdf_document: default
   word_document: default
 ---
 
@@ -71,7 +71,7 @@ The results of our data exploration efforts led us to drop three other variables
 
 ## Imputation of Missing Values (NA's)
 
-### Filling Misssing values in the Training Data Set
+### Filling Missing values in the Training Data Set
 
 We then worked on imputing the remaining missing data. To do this we made use of a linear regression approach recommended by Faraway (p.201) and Fox (p.611). We decided against the using the mean or median as a replacement value for NA's since regression yields imputed values that are much more consistent with the actual distribution of the data while introducing much less potential bias than use of a mean or median would incur.
 
