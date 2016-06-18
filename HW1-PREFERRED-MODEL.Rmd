@@ -109,14 +109,20 @@ pred.TW <- round(predict(model.4, eval.2))
 
 # add predicted variables to TARGET_WINS variable
 eval.2$TARGET_WINS <- pred.TW
+eval.d$TARGET_WINS <- pred.TW
 
 # write entire updated EVAL data set to a CSV
-write.csv(eval.2, file = "C:/SQLData/HW1-PRED-EVAL-ALLDATA.csv", row.names = FALSE)
+write.csv(eval.d, file = "C:/SQLData/HW1-PRED-EVAL-ALLDATA.csv", row.names = FALSE)
+
+# write full model EVAL data to a CSV file
+write.csv(eval.d, file = "C:/SQLData/HW1-PRED-EVAL-ALL_M_DATA.csv", row.names = FALSE)
 
 # now write just INDEX and TARGET_WINS to a separate file
 eval.3 <- eval.2[,c(1,8)]
 
 write.csv(eval.3, file = "C:/SQLData/HW1-PRED-EVAL-WINS-ONLY.csv", row.names = FALSE)
+
+# end
 
 ```
 
