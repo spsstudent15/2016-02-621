@@ -11,7 +11,7 @@ output:
   word_document: default
 ---
 
-```{r, eval=FALSE, include=FALSE}
+```{r, eval=FALSE, include=FALSE, echo=FALSE}
 BB.list <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/moneyball-training-data.csv", header=TRUE,
     stringsAsFactors=FALSE, sep=",")
 attach(BB.list)
@@ -26,6 +26,9 @@ mb_cor <- cor(BB.list[,3:17])
 round(mb_cor, 3)
 ```
 
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+# library(knitr)
+```
 # Overview
 
 In this homework assignment, you will explore, analyze and model a data set containing approximately 2200 records. Each record represents a professional baseball team from the years 1871 to 2006 inclusive. Each record has the performance of the team for the given year, with all of the statistics adjusted to match the performance of a 162 game season. 
@@ -117,21 +120,26 @@ Simply removing the *TEAM_BATTING_1B* variable yielded a model with all p-values
 
 The final model of that iteration of the linear modeling process showed clear evidence of a number of outliers as evidenced in R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model, which varies from the inital iteration in that it includes *TEAM_BATTING_2B* due to the fact that removing the outliers improved the statistical significance of the variable :
 
-TARGET_WINS = 66.261 - (0.017 * TEAM_BATTING_2B)  
-                     + (0.150 * TEAM_BATTING_3B)   
-                     + (0.109 * TEAM_BATTING_HR)  
-                     + (0.022 * TEAM_BATTING_BB)  
-                     - (0.019 * TEAM_BATTING_SO)  
-                     + (0.065 * TEAM_BASERUN_SB)  
-                     + (0.016 * TEAM_PITCHING_H)  
-                     - (0.075 * TEAM_FIELDING_E)  
-                     - (0.109 * TEAM_FIELDING_DP)  
 
-RSE =       11.49  on 2152 deg. of freedom  
-R^2 =       0.3598  
-Adj. R^2 =  0.3572  
-F Stat. =   134.4  
-MSE =       132  
+| Coefficient   | Variable  
+| ------------  | ------------
+| 66.261        | Intercept 
+| - 0.017       | TEAM_BATTING_2B
+| + 0.150       | TEAM_BATTING_3B
+| + 0.109       | TEAM_BATTING_HR
+| + 0.022       | TEAM_BATTING_BB
+| - 0.019       | TEAM_BATTING_SO
+| + 0.065       | TEAM_BASERUN_SB
+| + 0.016       | TEAM_PITCHING_H
+| - 0.075       | TEAM_FIELDING_E
+| - 0.109       | TEAM_FIELDING_DP  
+
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.49 | 0.3598  | 0.3572    | 134.4   | 132 
+
                      
 However, the diagnostic plots of that model showed a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for variables such as TEAM_BATTING_HR, TEAM_BATTING_SO, TEAM_BASERUN_SB, and TEAM_FIELDING_E.
 
@@ -139,20 +147,24 @@ The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recomm
 
 Therefore, this model appears to be an improvement over the first model when the residual plots are considered. The characteristic equation indicated by the model is as follows:
 
-TARGET_WINS = 52.88  + (0.168 * TEAM_BATTING_3B)  
-                     + (0.096 * TEAM_BATTING_HR)  
-                     + (0.027 * TEAM_BATTING_BB)   
-                     - (0.027 * TEAM_BATTING_SO)  
-                     + (0.034 * TEAM_BASERUN_SB)  
-                     + (0.004 * TEAM_PITCHING_H)  
-                     + (3252.31 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)   
-                     - (0.102 * TEAM_FIELDING_DP)  
 
-RSE =       11.86  on 2153 deg. of freedom  
-R^2 =       0.3168  
-Adj. R^2 =  0.3143  
-F Stat. =   124.8  
-MSE =       141  
+| Coefficient   | Variable  
+| ------------  | ------------
+| 52.88         | Intercept 
+| + 0.168       | TEAM_BATTING_3B
+| + 0.096       | TEAM_BATTING_HR
+| + 0.027       | TEAM_BATTING_BB
+| - 0.027       | TEAM_BATTING_SO
+| + 0.034       | TEAM_BASERUN_SB
+| + 0.004       | TEAM_PITCHING_H
+| + 3252.31     | 1/TEAM_FIELDING_E
+| - 0.102       | TEAM_FIELDING_DP
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.86 | 0.3168  | 0.3143    | 124.8   | 141
+
 
 The coefficients for TEAM_BATTING_3B, TEAM_BATTING_HR, TEAM_BATTING_BB, TEAM_BATTING_SO, and TEAM_BASERUN_SB all make sense intuitively. The TEAM_FIELDING_DP coefficient is less intuitive since one would expect more defensive double plays to improve a team's chances of winning games. However, the variable itself is *negatively* correlated with TARGET_WINS as shown in the __Data Exploration__ section above. As such, we shouldn't be surprised to see a negative coefficient for it here. Similarly, the coefficient for TEAM_PITCHING_H is also counterintuitive, but the variable is actually positively correlated with TARGET_WINS as shown in the __Data Exploration__ section. Finally, TEAM_FIELDING_E has changed from negative in the earlier model to positive here. However, this is due to the fact that the coefficient now applies to the *transformed* version of the variable rather than the nominal values of the variable.
 
@@ -187,19 +199,23 @@ This model applies simple Backward Selection methods through the use of p-values
 
 Three iterations of p-value / VIF backward selection removed TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
 
-TARGET_WINS = 48.486 + (0.022 * TEAM_BATTING_BB)  
-                     - (0.015 * TEAM_BATTING_SO)  
-                     + (0.063 * TEAM_BASERUN_SB)  
-                     + (0.010 * TEAM_PITCHING_H)  
-                     - (0.064 * TEAM_FIELDING_E)  
-                     - (0.117 * TEAM_FIELDING_DP)  
-                     + (0.018 * TOTAL_BASES)  
 
-RSE =       11.7  on 2154 deg. of freedom  
-R^2 =       0.3365  
-Adj. R^2 =  0.3343  
-F Stat. =   156  
-MSE =       137  
+| Coefficient   | Variable  
+| ------------  | ------------
+| 48.486        | Intercept 
+| + 0.022       | TEAM_BATTING_BB
+| - 0.015       | TEAM_BATTING_SO
+| + 0.063       | TEAM_BASERUN_SB
+| + 0.010       | TEAM_PITCHING_H
+| - 0.064       | TEAM_FIELDING_E
+| - 0.117       | TEAM_FIELDING_DP
+| + 0.018       | TOTAL_BASES
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.7  | 0.3365  | 0.3343    | 156     | 137
+
 
 The diagnostic plots of that model show a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for variables such as TEAM_BATTING_SO, TEAM_BASERUN_SB, and TEAM_FIELDING_E. 
 
@@ -207,18 +223,23 @@ The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recomm
 
 Therefore, this model appears to be an improvement over the first TOTAL_BASES model when the residual plots are considered. The characteristic equation indicated by the model is as follows:
 
-TARGET_WINS = 39.164 + (0.025 * TEAM_BATTING_BB)  
-                     - (0.025 * TEAM_BATTING_SO)  
-                     + (0.038 * TEAM_BASERUN_SB)  
-                     + (2714.54 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)   
-                     - (0.115 * TEAM_FIELDING_DP)  
-                     + (0.0197 * TOTAL_BASES)  
-                     
-RSE =       11.97  on 2155 deg. of freedom   
-R^2 =       0.3048  
-Adj. R^2 =  0.3029  
-F Stat. =   157.5  
-MSE =       143  
+| Coefficient   | Variable  
+| ------------  | ------------
+| 39.164        | Intercept 
+| + 0.025       | TEAM_BATTING_BB
+| - 0.025       | TEAM_BATTING_SO
+| + 0.038       | TEAM_BASERUN_SB  
+| + 2714.54     | 1/TEAM_FIELDING_E
+| - 0.115       | TEAM_FIELDING_DP
+| + 0.0197       | TOTAL_BASES
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.97 | 0.3048  | 0.3029    | 157.5   | 143
+
+
+
 
 The coefficients for TEAM_BATTING_BB, TEAM_BATTING_SO, TEAM_BASERUN_SB, and TOTAL_BASES all make sense intuitively. The TEAM_FIELDING_DP coefficient is less intuitive since one would expect more defensive double plays to improve a team's chances of winning games. However, the variable itself is *negatively* correlated with TARGET_WINS as shown in the __Data Exploration__ section above. As such, we shouldn't be surprised to see a negative coefficient for it here. TEAM_FIELDING_E has changed from negative in the earlier model to positive here. However, this is due to the fact that the coefficient now applies to the *transformed* version of the variable rather than the nominal values of the variable.
 
@@ -249,16 +270,21 @@ This model applies simple Backward Selection methods through the use of p-values
 
 Four iterations of p-value / VIF backward selection removed TEAM_PITCHING_H, TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
 
-TARGET_WINS = 52.330 - (0.016 * TEAM_BATTING_SO)  
-                     - (0.034 * TEAM_FIELDING_E)  
-                     - (0.154 * TEAM_FIELDING_DP)  
-                     + (0.025 * TB_PLUS)  
 
-RSE =       12.12  on 2162 deg. of freedom  
-R^2 =       0.2944   
-Adj. R^2 =  0.2931   
-F Stat. =   225.5  
-MSE =       145  
+| Coefficient   | Variable  
+| ------------  | ------------
+| 52.330        | Intercept 
+| - 0.016       | TEAM_BATTING_SO
+| - 0.034       | TEAM_FIELDING_E
+| - 0.154       | TEAM_FIELDING_DP
+| + 0.025       | TB_PLUS
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 12.12 | 0.2944  | 0.2931    | 225.5   | 145
+
+
 
 The coefficients for TEAM_BATTING_SO and TEAM_FIELDING_E make sense intuitively: the more strikeouts a team's offense has, the less likely it is to put the ball in play, and the more fielding errors a team commits, the more likely they are to lose games. The TEAM_FIELDING_DP coefficient is less intuitive since one would expect more defensive double plays to improve a team's chances of winning games. However, the variable itself is *negatively* correlated with TARGET_WINS as shown in the __Data Exploration__ section above. As such, we shouldn't be surprised to see a negative coefficient for it here. Finally, the coefficient for TB_PLUS is postively correlated with the response variable, which shouldn't surprise us since it encapsulates all of a team's offense hits, stolen bases, and bases on balls.
 
@@ -268,16 +294,20 @@ The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recomm
 
 Therefore, this model appears to be an improvement over the first TB_PLUS model when the residual plots are considered. Furthermore, the number of predictor variables used here is two fewer than that of the "Total Bases" model discussed earlier. The characteristic equation indicated by the model is as follows:
 
-TARGET_WINS = 42.160 - (0.023 * TEAM_BATTING_SO)  
-                     + (2366.82 * (1/TEAM_FIELDING_E))     (note 1/y transform applied)   
-                     - (0.140 * TEAM_FIELDING_DP)  
-                     + (0.022 * TB_PLUS)  
                      
-RSE =       12.13  on 2162 deg. of freedom  
-R^2 =       0.2932  
-Adj. R^2 =  0.2919  
-F Stat. =   224.3   
-MSE =       147  
+| Coefficient   | Variable  
+| ------------  | ------------
+| 42.160        | Intercept 
+| - 0.023       | TEAM_BATTING_SO
+| + 2366.82     | 1/TEAM_FIELDING_E
+| - 0.140       | TEAM_FIELDING_DP
+| + 0.022       | TB_PLUS
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 12.13 | 0.2932  | 0.2919    | 223.3   | 147
+
 
 As we can see, the coefficient for TEAM_FIELDING_E has changed from negative to positive. However, this is due to the fact that the coefficient now applies to the *transformed* version of the variable rather than the nominal values of the variable. The other coefficients remain the same.
 
@@ -299,19 +329,24 @@ Insert BSR histogram here??
 
 Since BSR is a combination of all of the batting variables, we simply eliminated them and created a very strong model on the first iteration.  All p-values were very low, and the variation are all below 5 showing no probems with collinearity.  The characteristic equation indicated by the model is as follows:
 
-TARGET_WINS = 40.689953 + (0.062185 * BSR)
-                        - (0.116618 * TEAM_FIELDING_DP)
-                        - (0.058867 * TEAM_FIELDING_E)
-                        + (0.60318 * TEAM_BASERUN_SB)
-                        - (0.011451 * TEAM_PITCHING_SO)
-                        + (0.019421 * TEAM_PITCHING_H)
-                        - (0.017615 * TEAM_PITCHING_BB)
 
-RSE =       11.99  on 2164 deg. of freedom  
-R^2 =       0.3229 
-Adj. R^2 =  0.3207 
-F Stat. =   147.4    
-MSE =       143.7  
+| Coefficient   | Variable  
+| ------------  | ------------
+| 40.689953     | Intercept 
+| + 0.062185    | BSR
+| - 0.116618    | TEAM_FIELDING_DP
+| - 0.058867    | TEAM_FIELDING_E
+| + 0.60318     | TEAM_BASERUN_SB
+| - 0.011451    | TEAM_PITCHING_SO
+| + 0.019421    | TEAM_PITCHING_H
+| - 0.017615    | TEAM_PITCHING_BB
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.99 | 0.3229  | 0.3207    | 147.4   | 143.7
+
+
 
 The coefficients for this model overall madke a lot of sense.  Errors and pitching walks contribute to fewer wins, and stolen bases and the BSR metric have strong influence on increasing wins.  Double plays do habve a slightly negative value, although this could be explained by a team allowing a large number of baserunners.     The positive impact of allowing pitching hits was puzzling.
 
@@ -323,19 +358,42 @@ The coefficients for this model overall madke a lot of sense.  Errors and pitchi
 
 - INSERT WRITEUP HERE
 
+Placeholder tables - need to be filled in with ACTUAL metrics for Model 5
+
+| Coefficient   | Variable  
+| ------------  | ------------
+| 52.88         | Intercept 
+| + 0.168       | TEAM_BATTING_3B
+| + 0.096       | TEAM_BATTING_HR
+| + 0.027       | TEAM_BATTING_BB
+| - 0.027       | TEAM_BATTING_SO
+| + 0.034       | TEAM_BASERUN_SB
+| + 0.004       | TEAM_PITCHING_H
+| + 3252.31     | 1/TEAM_FIELDING_E
+| - 0.102       | TEAM_FIELDING_DP
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.86 | 0.3168  | 0.3143    | 124.8   | 141
+
 # -------------------------------------------------------
 
 # Part 4. Select Models
 
 As we compared our models, it was clear that the two strongest were the total bases plus model (#3) and the sabermetrics model (#4).  Models 1 and 2 were rejected for reasons explained in the model description, and so we need to compare the two models as shown in the chart below:  
 
-  Metric     | Total Bases  | Sabermetrics
--------------|--------------|-------------
-  RSE        | 12.12        | 11.99
-  R^2        | 0.2994       | 0.3229
-  Adj. R^2   | 0.2931       | 0.3207
-  F Stat.    | 225.5        | 147.4
-  MSE        | 145          | 143.7
+
+
+| Metric    | General Model | Total Bases | TB PLUS | Sabermetrics  | Model 5  
+| --------- | ------------- | ----------- | ------- | ------------- | -------  
+| RSE       | 11.86         | 11.97       | 12.12   | 11.99         | 0 
+| R^2       | 0.3168        | 0.3048      | 0.2994  | 0.3229        | 0
+| Adj. R^2  | 0.3143        | 0.3029      | 0.2931  | 0.3207        | 0
+| F Stat.   | 124.8         | 157.5       | 224.3   | 147.4         | 0 
+| MSE       | 141           | 143         | 147     | 143.7         | 0 
+
+
 
 Following our data analysis both models seem to have no issues with collinearlty.  As the table shows, the decision is not clear, as the sabermetrics model had the better R^2 and RSE values, while the Total Bases model had the better F statistic.  While both models obviously reject the null hypothesis, the total bases model has a higher value showing a better ratio.  This coupled with the fact that the total bases model is simpler and teh coefficients all make perfect sense, we decided to select that model over the sbaermetrics model, sacrificing a little of R^2 value for the higher F statistic, simplicity and more logical coefficients.
   

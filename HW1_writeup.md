@@ -3,6 +3,7 @@ Critical Thinking Group 2
 
 
 
+
 # Overview
 
 In this homework assignment, you will explore, analyze and model a data set containing approximately 2200 records. Each record represents a professional baseball team from the years 1871 to 2006 inclusive. Each record has the performance of the team for the given year, with all of the statistics adjusted to match the performance of a 162 game season. 
@@ -24,75 +25,35 @@ Bar Chart or Box Plot of the data
 ## Correlation Plot
 Is the data correlated to the target variable (or to other variables?)
 
+#Part 2 - Data Preparation:
 ## Missing and Invalid Data
 
 We began by creating a new attribute for singles, taking the hits value and subtracting out the doubles, triples and home runs. Then we eliminated the batting hits column. We believe that separating out singles with the other unique hit values will minimize collinearity.
 
-We began by excluding 4 data attributes for the models:
+We followed by excluding 4 data attributes for the purpose of the models which we noticed during the data survey:
 
 1. Hit by Pitch: In the case of hit by pitch there were very few values present (2085 missing). Based on SME knowledge from actual coaches we discovered that hit by pitches rarely impact wins. Therefore, we chose to exclude it.
 
 2. Caught stealing: In the case of caught stealing there were many missing values as well (772). 
 This attribute was found to be highly collinear with the stolen base attribute (because teams that steal a lot of bases will have more caught stealing). As a result, we chose to exclude this value and kept the positive value of stolen bases which had fewer missing components.
 
-3. Pitching Home Runs Allowed: These data were also found to be highly collinear with Batting Homeruns (because the years of "juicing" tended to have a lot of homeruns hit and therefore pitched, while the "dead ball years" had very few hit and allowed). We chose to exclude this attribute and kept the home runs batting value
+3. Pitching Home Runs Allowed: These data were also found to be highly collinear with batting homeruns as years with more homeruns hit directly match years with similar amount of homeruns allowed (for example, the years of "juicing" in the 1990's tended to have a lot of homeruns hit and therefore pitched, while the "dead ball years" prior to 1920 had very few hit and allowed). We chose to exclude this attribute and kept the home runs batting value. 
 
 4. Index: These numbers were simply sorting keys and offer no real statistical value to the model and were therefore excluded. 
 
-We then worked on filling in the remaining missing data. To do this we used a linear regression approach recommended by Faraway (p.???) and Fox (p.???). We decided against the mean and median as the regression approach will fill in with better variance. We filled the following fields:
+We then worked on imputing the remaining missing data. To do this we used a linear regression approach recommended by Faraway (p.201) and Fox (p.611). We decided against the mean and median as regression imputation will fill in with better variance, instead of placing 100+ values that are exactly the same. We filled the following fields:
 
-1. Batting strikeouts: The adjusted R squared value for our regression was 0.7223 and the data appeared normal. We created a function that allowed us to only replace the missing values.Here we replaced 102 values.
+1. Batting strikeouts: The adjusted R squared value for our regression was 0.7223 and the data appeared to be normally distributed. We created a function we called "impute" that allowed us to only replace the values missing with the imputed ones (and for batting strikeouts we imputed 102 values.
 
-2. Pitching strikeouts: We achieved a really good approach here as the adjusted R squared value was 0.9952. Here again we replaced the same 102 values
+2. Pitching strikeouts: We achieved a really good approach here as the adjusted R squared value was 0.9952. Here again we imputed 102 values in the same rows as the batting strikeouts.
 
-3. Stolen Bases: The model here was not quite as strong with an adjusted R squared value of 0.3427. Here we replaced 131 values.
+3. Stolen Bases: The model here was not quite as strong with an adjusted R squared value of 0.3427. Here we imputed 131 values.
 
-4. Double Plays: The model here had an adjusted R squared value of 0.3904. Here we replaced 286 missing values. We completed this phase for the master data source by eliminating some clear outliers. The record for the most pitching strikeouts is 1450 by the 2014 Cleveland Indians. Therefore we know that everything above that point is an aberration, so we ignored all lines with a strikeout total above 1450. Similarly, the most errors by team was 639 by Philadelphia in 1883. Prorated to 162 games we ignored all rows with errors above 1046. The most ever hits by a team was 1730. To allow for any margin of error when translated to pitching we ignored all pitching hits allowed above 3000. This approach removed 104 rows and the data had a much more normal distribution for these values. For our individual models we did look at combining certain fields or creating some unique attributes from the data fields provided. We also looked at power transformations as well. These model-based transformations will be covered in the individual model section.
+4. Double Plays: The model here had an adjusted R squared value of 0.3904. Here we imputed the 286 missing values. 
 
+We completed this phase for the master data source by eliminating some clear outliers, based on research through baseball-almanac.com. This approach is suggested by Sheather (p. 57).  The record for the most pitching strikeouts is 1450 by the 2014 Cleveland Indians. Therefore we know that everything above that point is an aberration, so we ignored all rows with a strikeout total above 1450. Similarly, the most errors by team was 639 by Philadelphia in 1883. Prorating to 162 games we ignored all rows with errors above 1046. The most ever hits by a team was 1730. To allow for any margin of error when translated to pitching we ignored all rows with pitching hits allowed above 3000. This approach removed a total 104 rows and the data had a much more normal distribution for these values after deleting the targeted rows. 
 
-
-
-# Part 2. Data Preparation
-
-## Prompt
-Describe how you have transformed the data by changing the original variables or creating new variables. If you did transform the data or create new variables, discuss why you did this. Here are some possible transformations:
-
-Fix missing values (maybe with a Mean or Median value)
-Create flags to suggest if a variable was missing
-Transform data by putting it into buckets
-Mathematical transforms such as log or square root (or use Box-Cox)
-Combine variables (such as ratios or adding or multiplying) to create new variables
-
-## Notes
-are we introducing outliers through imputation?
-4 variables have significant NA variables and need to be addressed 
-[chart of NA percentage]
-concerns about linearity
-linear model introduced the fewest problems compared to other options
-linear model fits the data to the existing distribution of the variable
-is it valid to replace the outliers or should we ignore them? 
-good leverage points - fictitious data or outside norm but still fit on line
-bad leverage points - pulling data
-if beyond 2 SDs using cook's distance test, then remove
-how many instances are we replacing - 3000
-delete about 100 lines out of 2200
-3 variables with very skewed data
-
-
-## Addressing Outliers via Historical Data
-
-If you run the two strikeouts variables against each other you really see these leveraged "bad" values clustered near zero and between 1500 & 20000 pitched strikeouts (clearly made-up numbers).  Many of these outliers are invalid in more that one column. 
-
-The record for pitched strikeouts is 1450 by the 2014 Cleveland Indians.
-
-Proving that players are striking out with less frequency in 1921, the Cincinnati Reds set a major league mark for #the fewest team strikeouts with 308, while Phillie pitchers set an all-time low by striking out 333 opponents through #the year.
-
-min & max team strikeouts all-time
-http://www.baseball-almanac.com/recbooks/rb_strike2.shtml
-329 1526
-
-http://www.thisgreatgame.com/1921-baseball-history.html
-http://www.foxsports.com/florida/story/tampa-bay-rays-set-franchise-strikeout-record-092114
+For our individual models we did look at combining certain fields or creating some unique attributes from the data fields provided. We also looked at power transformations as well. These model-based transformations will be covered in the individual model section.
 
 ## Addressing Outliers via Cook's Distance
 
@@ -109,105 +70,324 @@ Figure 3.13 on page 68
 #identify(CouponRate,cd1,Case)
 ```
 
-Once removed, these influential points may improve the variability problems with some of our data, or at least make it easier run a transform.
-A pattern of non-constant variability calls into question whether a variable belongs in the linear model.
 
-
-## Combining Variables and Creating New Variables
-
-converting the hits (singles, 2B, 3B, HR) to TOTAL_BASES
-
-TOTAL BASES only includes actual hits and not SB's or HBP's or BB's.  
-
-The following variable was added:
-
-
-```r
-# mb_red8$TOTAL_BASES <- mb_red8$TEAM_BATTING_1B + (2 * mb_red$TEAM_BATTING_2B) + 
-# (3 * mb_red$TEAM_BATTING_3B) + (4 * mb_red$TEAM_BATTING_HR)
-```
-
-
-which yields a nice, normal distribution thereby eliminating the skew problems that can be found in some of the underlying variables. That statistic alone accounts for nearly 18% of the variability in TARGET_WINS.
-
-
-## Evaluating Constant Variability for Imputation
-
-The linear models used for imputing the NA's all appear to fail to meet the requirement of constant variability in the residuals.  This can be seen in the "Residuals vs. Fitted" plots for each one - each one has a much narrower range of residual values for in the lower ranges of the fitted variable than they do in the upper ranges. 
-
-
-## Evaluating Linearity for Imputation
-
-Also, at least three of the "Residuals vs. Fitted" plots show clear patterns in the residuals which is a telltale sign of non-linearity in the underlying data.
-
-Both of these issues indicate that the linear models used for imputing the NA's aren't valid. 
-
-Do the overall predictors pass the constant variability test.  Remember we put in only a 100 or data points in 4 fields - so maybe 400 out of 20,000 or so.   For the sake of the models that really matter - target win prediction the issues you raise become very relevant. 
-
-## Evaluating Normality for Multi Imputation
-
-Multi-imputation doesn't work without normally distributed data.
-
-## Addressing NA Values with Imputation
-
-Deleting missing cases is the simplest strategy for dealing with missing data.  It avoids the complexity and possible biases introduced by more sophisticated methods. The drawback is throwing away infomration that might allow more precise inference. If relatively few cases contain missing values deleting still leaves a
-large dataset or to communicate a simple data analysis method, the deltion strategy is satisfactory.
-
-Standard errors are larger after deleting cases because of fewer records to fit the model. arger standard errors results in less precise estimates.  (Faraway, LMR 2015, p.200)
-
-Single imputation  . .  causes bias, while deletion causes a loss of information. Multiple imputation is a way to reduce the bias caused by single imputation.  The problem with single imputation is the value tends to be less variable than the value we would have seen because it does not include the error variation normally seen in observed data.  The idea behind multiple imputation is to re-include that error variation.
-(Faraway, LMR 2015, p.202)
-
-Multiple imputation can be done using the Amelia package.  Per Faraway, the assumption is the data is multivariate normal, so heavily skewed variables should be log-transformed first.
-
-we want to fill in NA's where possible since we are concerned about the possible effects of discarding so many data records.
-
-Using multiple imputation allows us to fill in some of the NA's without introducing undue bias into the model the way single imputation would. 
-
-The R^2 values are MUCH better WITHOUT the missing variables filled in, in most instances a difference of at least 0.10, i.e., if a model yielded an R^2 of 0.40 without the NA's filled in that same model yields an R^2 of less than 0.30 with them filled in.
-
-Could it be we're introducing bias via the NA fill in and/or setting the outliers to the median for those 3 variables? For example the PITCHING_H variable has a total of 86 elements (3.8% of the total) with a value > 3000, and we're setting them all to a value of 1518, etc..
-
-Also, after running diagnostics on several different models, SB's and TEAM_BATTING_BB's, and FIELDING_E consistently showed as having non-constant variability relative to the residuals. All of those variables have fairly significant skew in their own distributions so we might want to consider transforming them or seeing if we can normalize them by getting rid of some of their outliers per Scott's suggestion.
-
-
-Stolen Bases - consider Amelia script for multiple imputing
-
+# -------------------------------------------------------
 
 # Part 3. Build Models
 
-## Model 1. SMK Model 1
+## Model 1 - General Model Using Backward Selection
 
-**Writeup**
+This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
 
-Ran a regression of home runs against wins using Box-cox.
-Transformed home runs to become symmetric and improve standard errors.
-Used this transformed primiteive variable in the multi regression model.
+- TEAM_BATTING_1B (derived variable)  
+- TEAM_BATTING_2B  
+- TEAM_BATTING_3B  
+- TEAM_BATTING_HR  
+- TEAM_BATTING_BB  
+- TEAM_BATTING_SO  
+- TEAM_BASERUN_SB  
+- TEAM_PITCHING_H  
+- TEAM_PITCHING_BB  
+- TEAM_PITCHING_SO  
+- TEAM_FIELDING_E  
+- TEAM_FIELDING_DP  
+
+Simply removing the *TEAM_BATTING_1B* variable yielded a model with all p-values less than $.05$. However, VIF analysis showed evidence of multiple collinear variables within the model. Subsequent removals of *TEAM_PITCHING_SO* and *TEAM_PITCHING_BB* due to collinearity yielded a model that called for the removal of *TEAM_BATTING_2B* on the basis of its p-value.
+
+The final model of that iteration of the linear modeling process showed clear evidence of a number of outliers as evidenced in R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model, which varies from the inital iteration in that it includes *TEAM_BATTING_2B* due to the fact that removing the outliers improved the statistical significance of the variable :
+
+TARGET_WINS = 66.261 - (0.017 * TEAM_BATTING_2B)  
+                     + (0.150 * TEAM_BATTING_3B)   
+                     + (0.109 * TEAM_BATTING_HR)  
+                     + (0.022 * TEAM_BATTING_BB)  
+                     - (0.019 * TEAM_BATTING_SO)  
+                     + (0.065 * TEAM_BASERUN_SB)  
+                     + (0.016 * TEAM_PITCHING_H)  
+                     - (0.075 * TEAM_FIELDING_E)  
+                     - (0.109 * TEAM_FIELDING_DP)  
+
+RSE =       11.49  on 2152 deg. of freedom  
+R^2 =       0.3598  
+Adj. R^2 =  0.3572  
+F Stat. =   134.4  
+MSE =       132  
+
+| Coefficient   | Variable  
+| ------------  | ------------
+| 66.261        | Intercept 
+| - 0.017       | TEAM_BATTING_2B
+| + 0.150       | TEAM_BATTING_3B
+| + 0.109       | TEAM_BATTING_HR
+| + 0.022       | TEAM_BATTING_BB
+| - 0.019       | TEAM_BATTING_SO
+| + 0.065       | TEAM_BASERUN_SB
+| + 0.016       | TEAM_PITCHING_H
+| - 0.075       | TEAM_FIELDING_E
+| - 0.109       | TEAM_FIELDING_DP  
 
 
-<a href="https://github.com/spsstudent15/2016-02-621-W1/blob/master/HW_1_SMKmodel.pdf">SMK Model 1 PDF</a>
 
-<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/HW_1_SMKmodel.Rmd">SMK Model 1 RMD</a>
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.49 | 0.3598  | 0.3572    | 134.4   | 132 
 
-## Model 2. 
+                     
+However, the diagnostic plots of that model showed a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for variables such as TEAM_BATTING_HR, TEAM_BATTING_SO, TEAM_BASERUN_SB, and TEAM_FIELDING_E.
 
-**Writeup**
+The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recommended power transform of (-1), or (1/y) and the model was re-run. The resulting Added Variable plots showed that all predictors are linearly related to the response, and we see an improvement in the variability of the residuals relative to TEAM_FIELDING_E. Furthermore, the plot of Y against the fitted values showed an improvement in the linearity of the model. 
 
-<a href="https://github.com/spsstudent15/2016-02-621-W1/blob/master/">Model 2 PDF</a>
+Therefore, this model appears to be an improvement over the first model when the residual plots are considered. The characteristic equation indicated by the model is as follows:
 
-<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/">Model 2 RMD</a>
 
-## Model 3. 
+| Coefficient   | Variable  
+| ------------  | ------------
+| 52.88         | Intercept 
+| + 0.168       | TEAM_BATTING_3B
+| + 0.096       | TEAM_BATTING_HR
+| + 0.027       | TEAM_BATTING_BB
+| - 0.027       | TEAM_BATTING_SO
+| + 0.034       | TEAM_BASERUN_SB
+| + 0.004       | TEAM_PITCHING_H
+| + 3252.31     | 1/TEAM_FIELDING_E
+| - 0.102       | TEAM_FIELDING_DP
 
-**Writeup**
 
-<a href="https://github.com/spsstudent15/2016-02-621-W1/blob/master/">Model 3 PDF</a>
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.86 | 0.3168  | 0.3143    | 124.8   | 141
 
-<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/">Model 3 RMD</a>
 
+The coefficients for TEAM_BATTING_3B, TEAM_BATTING_HR, TEAM_BATTING_BB, TEAM_BATTING_SO, and TEAM_BASERUN_SB all make sense intuitively. The TEAM_FIELDING_DP coefficient is less intuitive since one would expect more defensive double plays to improve a team's chances of winning games. However, the variable itself is *negatively* correlated with TARGET_WINS as shown in the __Data Exploration__ section above. As such, we shouldn't be surprised to see a negative coefficient for it here. Similarly, the coefficient for TEAM_PITCHING_H is also counterintuitive, but the variable is actually positively correlated with TARGET_WINS as shown in the __Data Exploration__ section. Finally, TEAM_FIELDING_E has changed from negative in the earlier model to positive here. However, this is due to the fact that the coefficient now applies to the *transformed* version of the variable rather than the nominal values of the variable.
+
+While this model is an improvement over the initial model, we still have component variables that appear to lack constant variability relative to the residuals for variables such as TEAM_BASERUN_SB. The lack of constant variability in the residuals is likely related to the skewed nature of the distributions of those individual variables. 
+
+In the other models discussed herein we attempt to address some of the skew issues via various methods, including Box-Cox recommended power transforms and linear combinations of various variables.
+
+
+# -------------------------------------------------------
+
+## Model 2 - Total Bases 
+
+This model attempts to address some of the lack of constant variability found in the "General Model" discussed above by employing a linear combination of four of the predictor variables to calculate the baseball statistc known as "Total Bases". Total Bases is calculated using what our data set refers to as "TEAM_BATTING" variables as follows:
+
+Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs)
+
+Inclusion of this new variable allows us to eliminate the four component variables from the model. In fact, the TOTAL_BASES variable appears to be normally distributed, thereby negating the skew issues that were evident with its component variables.
+
+- INSERT HISTOGRAM of TOTAL_BASES HERE???
+
+This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
+
+- TEAM_TOTAL_BASES (derived variable)  
+- TEAM_BATTING_BB  
+- TEAM_BATTING_SO  
+- TEAM_BASERUN_SB  
+- TEAM_PITCHING_H  
+- TEAM_PITCHING_BB  
+- TEAM_PITCHING_SO  
+- TEAM_FIELDING_E  
+- TEAM_FIELDING_DP  
+
+Three iterations of p-value / VIF backward selection removed TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
+
+
+| Coefficient   | Variable  
+| ------------  | ------------
+| 48.486        | Intercept 
+| + 0.022       | TEAM_BATTING_BB
+| - 0.015       | TEAM_BATTING_SO
+| + 0.063       | TEAM_BASERUN_SB
+| + 0.010       | TEAM_PITCHING_H
+| - 0.064       | TEAM_FIELDING_E
+| - 0.117       | TEAM_FIELDING_DP
+| + 0.018       | TOTAL_BASES
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.7  | 0.3365  | 0.3343    | 156     | 137
+
+
+The diagnostic plots of that model show a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for variables such as TEAM_BATTING_SO, TEAM_BASERUN_SB, and TEAM_FIELDING_E. 
+
+The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recommended power transform of (-1), or (1/y) and the model was re-run. The resulting Added Variable plots show that all predictors are linearly related to the response, and we see an improvement in the variability of the residuals relative to TEAM_FIELDING_E. Furthermore, the plot of Y against the fitted values shows an improvement in the linearity of the model. 
+
+Therefore, this model appears to be an improvement over the first TOTAL_BASES model when the residual plots are considered. The characteristic equation indicated by the model is as follows:
+
+| Coefficient   | Variable  
+| ------------  | ------------
+| 39.164        | Intercept 
+| + 0.025       | TEAM_BATTING_BB
+| - 0.025       | TEAM_BATTING_SO
+| + 0.038       | TEAM_BASERUN_SB  
+| + 2714.54     | 1/TEAM_FIELDING_E
+| - 0.115       | TEAM_FIELDING_DP
+| + 0.0197       | TOTAL_BASES
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.97 | 0.3048  | 0.3029    | 157.5   | 143
+
+
+
+
+The coefficients for TEAM_BATTING_BB, TEAM_BATTING_SO, TEAM_BASERUN_SB, and TOTAL_BASES all make sense intuitively. The TEAM_FIELDING_DP coefficient is less intuitive since one would expect more defensive double plays to improve a team's chances of winning games. However, the variable itself is *negatively* correlated with TARGET_WINS as shown in the __Data Exploration__ section above. As such, we shouldn't be surprised to see a negative coefficient for it here. TEAM_FIELDING_E has changed from negative in the earlier model to positive here. However, this is due to the fact that the coefficient now applies to the *transformed* version of the variable rather than the nominal values of the variable.
+
+
+# -------------------------------------------------------
+
+## Model 3 - Total Bases PLUS
+
+This model attempts to improve upon the results of the "Total Bases" model by extending the TOTAL_BASES variable to include the TEAM_BATTING_BB and TEAM_BASERUN_SB variables. The logic behind adding these two variables to the TOTAL_BASES variable comes from the fact that both, like the component variables of TOTAL_BASES, represent basepath advancements by a team's offense.
+
+"Total Bases Plus"" (referred to as TB_PLUS hereon) is calculated using what our data set refers to as "TEAM_BATTING" and "TEAM_BASERUN" variables as follows:
+
+Singles + (2 * Doubles) + (3 * Triples) = (4 * Home Runs) + BB + SB  
+
+Inclusion of this new variable allows us to eliminate the two additional component variables from the model. In fact, the TB_PLUS variable, like the TOTAL_BASES variable used earlier appears to be normally distributed, thereby negating the skew issues that were evident with its component variables.
+
+- INSERT HISTOGRAM of TB_PLUS HERE???
+
+This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
+
+- TB_PLUS (derived variable)  
+- TEAM_BATTING_SO  
+- TEAM_PITCHING_H  
+- TEAM_PITCHING_BB  
+- TEAM_PITCHING_SO  
+- TEAM_FIELDING_E  
+- TEAM_FIELDING_DP  
+
+Four iterations of p-value / VIF backward selection removed TEAM_PITCHING_H, TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
+
+
+| Coefficient   | Variable  
+| ------------  | ------------
+| 52.330        | Intercept 
+| - 0.016       | TEAM_BATTING_SO
+| - 0.034       | TEAM_FIELDING_E
+| - 0.154       | TEAM_FIELDING_DP
+| + 0.025       | TB_PLUS
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 12.12 | 0.2944  | 0.2931    | 225.5   | 145
+
+
+
+The coefficients for TEAM_BATTING_SO and TEAM_FIELDING_E make sense intuitively: the more strikeouts a team's offense has, the less likely it is to put the ball in play, and the more fielding errors a team commits, the more likely they are to lose games. The TEAM_FIELDING_DP coefficient is less intuitive since one would expect more defensive double plays to improve a team's chances of winning games. However, the variable itself is *negatively* correlated with TARGET_WINS as shown in the __Data Exploration__ section above. As such, we shouldn't be surprised to see a negative coefficient for it here. Finally, the coefficient for TB_PLUS is postively correlated with the response variable, which shouldn't surprise us since it encapsulates all of a team's offense hits, stolen bases, and bases on balls.
+
+As with the "General Model" and the "Total Bases" model, the diagnostic plots for this model showed a lack of linearity between the response variable TARGET_WINS and the predictor variable TEAM_FIELDING_E as evidenced in the Added Variable plots shown in the Appendix. Furthermore, the plots of standardized residuals against each of the predictor variables showed evidence of non-constant variability for the variables TEAM_BATTING_SO and TEAM_FIELDING_E.
+
+The TEAM_FIELDING_E variable was subsequently transformed using a Box-Cox recommended power transform of (-1), or (1/y) and the model was re-run. The resulting Added Variable plots showed that all predictors are linearly related to the response, and we found an improvement in the variability of the residuals relative to TEAM_FIELDING_E. Furthermore, the plot of Y against the fitted values shows a non-skewed linear relationship. 
+
+Therefore, this model appears to be an improvement over the first TB_PLUS model when the residual plots are considered. Furthermore, the number of predictor variables used here is two fewer than that of the "Total Bases" model discussed earlier. The characteristic equation indicated by the model is as follows:
+
+                     
+| Coefficient   | Variable  
+| ------------  | ------------
+| 42.160        | Intercept 
+| - 0.023       | TEAM_BATTING_SO
+| + 2366.82     | 1/TEAM_FIELDING_E
+| - 0.140       | TEAM_FIELDING_DP
+| + 0.022       | TB_PLUS
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 12.13 | 0.2932  | 0.2919    | 223.3   | 147
+
+
+As we can see, the coefficient for TEAM_FIELDING_E has changed from negative to positive. However, this is due to the fact that the coefficient now applies to the *transformed* version of the variable rather than the nominal values of the variable. The other coefficients remain the same.
+
+# -------------------------------------------------------
+
+## Model 4 :Sabermetrics Model
+
+Sabermetrics has become the rage in baseball, actually popularized by Billy Beane and the data set we are exploring.  As a result of this, we built a model that centers around one of these advance analyticsm known as BsR or base runs. This statistic was designed by David Smyth and estimates the amount of runs a team SHOULD score, which made a unique approach as the data set provided did not include runs. The formula is as follows:
+
+BSR = A*B/(B+C) +D where:
+     A = TEAM_BATTING_1B + TEAM_BATTING_2B + TEAM_BATTING_3B + TEAM_BATTING_BB
+     B = 1.02*(1.4*TEAM_TOTAL_BASES -0.6*TEAM_BATTING_H + 0.1*TEAM_BATTING_BB)
+     C = AT BATS - TEAM_BATTING_H (which we approximated with 3*TEAM_BATTING_H as the average batting average is around 0.250)
+     D = TEAM_BATTING_HR
+    
+Since we eliminated the value of TEAM_BATTING_H we simply summed up singles, doubles, triples and home runs in the actual code, and the approach for TEAM_TOTAL_BASES is described in model 2.  The data for BSR exhibit a fairly normal distribution.
+
+Insert BSR histogram here??
+
+Since BSR is a combination of all of the batting variables, we simply eliminated them and created a very strong model on the first iteration.  All p-values were very low, and the variation are all below 5 showing no probems with collinearity.  The characteristic equation indicated by the model is as follows:
+
+
+| Coefficient   | Variable  
+| ------------  | ------------
+| 40.689953     | Intercept 
+| + 0.062185    | BSR
+| - 0.116618    | TEAM_FIELDING_DP
+| - 0.058867    | TEAM_FIELDING_E
+| + 0.60318     | TEAM_BASERUN_SB
+| - 0.011451    | TEAM_PITCHING_SO
+| + 0.019421    | TEAM_PITCHING_H
+| - 0.017615    | TEAM_PITCHING_BB
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.99 | 0.3229  | 0.3207    | 147.4   | 143.7
+
+
+
+The coefficients for this model overall madke a lot of sense.  Errors and pitching walks contribute to fewer wins, and stolen bases and the BSR metric have strong influence on increasing wins.  Double plays do habve a slightly negative value, although this could be explained by a team allowing a large number of baserunners.     The positive impact of allowing pitching hits was puzzling.
+
+
+# -------------------------------------------------------
+
+## Model 5
+
+
+- INSERT WRITEUP HERE
+
+Placeholder tables - need to be filled in with ACTUAL metrics for Model 5
+
+| Coefficient   | Variable  
+| ------------  | ------------
+| 52.88         | Intercept 
+| + 0.168       | TEAM_BATTING_3B
+| + 0.096       | TEAM_BATTING_HR
+| + 0.027       | TEAM_BATTING_BB
+| - 0.027       | TEAM_BATTING_SO
+| + 0.034       | TEAM_BASERUN_SB
+| + 0.004       | TEAM_PITCHING_H
+| + 3252.31     | 1/TEAM_FIELDING_E
+| - 0.102       | TEAM_FIELDING_DP
+
+
+| RSE   | R^2     | Adj. R^2  | F Stat. | MSE
+| ----- | ------- | --------- | ------- | -----
+| 11.86 | 0.3168  | 0.3143    | 124.8   | 141
+
+# -------------------------------------------------------
 
 # Part 4. Select Models
 
+As we compared our models, it was clear that the two strongest were the total bases plus model (#3) and the sabermetrics model (#4).  Models 1 and 2 were rejected for reasons explained in the model description, and so we need to compare the two models as shown in the chart below:  
+
+
+
+| Metric    | General Model | Total Bases | TB PLUS | Sabermetrics  | Model 5  
+| --------- | ------------- | ----------- | ------- | ------------- | -------  
+| RSE       | 11.86         | 11.97       | 12.12   | 11.99         | 0 
+| R^2       | 0.3168        | 0.3048      | 0.2994  | 0.3229        | 0
+| Adj. R^2  | 0.3143        | 0.3029      | 0.2931  | 0.3207        | 0
+| F Stat.   | 124.8         | 157.5       | 224.3   | 147.4         | 0 
+| MSE       | 141           | 143         | 147     | 143.7         | 0 
+
+
+
+Following our data analysis both models seem to have no issues with collinearlty.  As the table shows, the decision is not clear, as the sabermetrics model had the better R^2 and RSE values, while the Total Bases model had the better F statistic.  While both models obviously reject the null hypothesis, the total bases model has a higher value showing a better ratio.  This coupled with the fact that the total bases model is simpler and teh coefficients all make perfect sense, we decided to select that model over the sbaermetrics model, sacrificing a little of R^2 value for the higher F statistic, simplicity and more logical coefficients.
+  
 To test our models, we needed an evaluation data set with NA's imputed. We checked the imputation output to ensure it conformed with the actual distribution of each of the impacted variables in the EVAL set. 
 
 The EVAL data set with the NA's filled can be found here:
