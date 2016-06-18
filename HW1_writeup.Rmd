@@ -75,7 +75,7 @@ The results of our data exploration efforts led us to drop three other variables
 
 We then worked on imputing the remaining missing data. To do this we made use of a linear regression approach recommended by Faraway (p.201) and Fox (p.611). We decided against the using the mean or median as a replacement value for NA's since regression yields imputed values that are much more consistent with the actual distribution of the data while introducing much less potential bias than use of a mean or median would incur.
 
-We built regression imputation models for the following variables. Each model was analyzed to ensure that there were no collinearity issues and all p-values were < $.05$. While we did not not have the time or resources to run a complete cadre of residual diagnostics on these imputation models, we did verify that their results produced imputed distributions of the subject variables that were consistent with those of the original NA-populated data. It is our belief that this consistency indicates that the resulting predicted values for the missing values are better to use than simply filling the NA's with a mean or median.
+We built regression imputation models for the variables listed below. Each model was analyzed to ensure that there were no collinearity issues and all p-values were < $.05$. While we did not not have the time or resources to run a complete cadre of residual diagnostics on these imputation models, we did verify that their results produced imputed distributions of the subject variables that were consistent with those of the original NA-populated data. It is our belief that this consistency indicates that the resulting predicted values for the missing values are better to use than simply filling the NA's with a mean or median.
 
 The variables we built imputation regression models for are described below. The R code for each of the regression models is contained in the Appendix.
 
@@ -111,7 +111,7 @@ __*As such, our Evaluation data set is comprised of a total of 248 records rathe
 
 Our Evaluation data set with the NA's filled and outliers removed can be found here:
 
-<a href="https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-EvalData-.csv">Clean Eval Data</a>
+https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-EvalData-.csv
 
 ## Other Data Prepation Transformations: Refer to Model Descriptions
 
