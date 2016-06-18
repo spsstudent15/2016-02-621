@@ -47,6 +47,7 @@ Bar Chart or Box Plot of the data
 ## Correlation Plot
 Is the data correlated to the target variable (or to other variables?)
 
+#Part 2 - Data Preparation:
 ## Missing and Invalid Data
 
 We began by creating a new attribute for singles, taking the hits value and subtracting out the doubles, triples and home runs. Then we eliminated the batting hits column. We believe that separating out singles with the other unique hit values will minimize collinearity.
@@ -58,7 +59,7 @@ We followed by excluding 4 data attributes for the purpose of the models which w
 2. Caught stealing: In the case of caught stealing there were many missing values as well (772). 
 This attribute was found to be highly collinear with the stolen base attribute (because teams that steal a lot of bases will have more caught stealing). As a result, we chose to exclude this value and kept the positive value of stolen bases which had fewer missing components.
 
-3. Pitching Home Runs Allowed: These data were also found to be highly collinear with batting homeruns as years with more homeruns hit directly match years with similar amount of homeruns allowed (for example, the years of "juicing" in the 1990's tended to have a lot of homeruns hit and therefore pitched, while the "dead ball years" prior to 1920 had very few hit and allowed). We chose to exclude this attribute and kept the home runs batting value
+3. Pitching Home Runs Allowed: These data were also found to be highly collinear with batting homeruns as years with more homeruns hit directly match years with similar amount of homeruns allowed (for example, the years of "juicing" in the 1990's tended to have a lot of homeruns hit and therefore pitched, while the "dead ball years" prior to 1920 had very few hit and allowed). We chose to exclude this attribute and kept the home runs batting value. 
 
 4. Index: These numbers were simply sorting keys and offer no real statistical value to the model and were therefore excluded. 
 
@@ -76,10 +77,6 @@ We completed this phase for the master data source by eliminating some clear out
 
 For our individual models we did look at combining certain fields or creating some unique attributes from the data fields provided. We also looked at power transformations as well. These model-based transformations will be covered in the individual model section.
 
-
-
-
-# Part 2. Data Preparation
 
 ## Prompt
 Describe how you have transformed the data by changing the original variables or creating new variables. If you did transform the data or create new variables, discuss why you did this. Here are some possible transformations:
@@ -390,10 +387,38 @@ As we can see, the coefficient for TEAM_FIELDING_E has changed from negative to 
 
 # -------------------------------------------------------
 
-## Model 4
+## Model 4 :Sabermetrics Model
 
+Sabermetrics has become the rage in baseball, actually popularized by Billy Beane and the data set we are exploring.  As a result of this, we built a model that centers around one of these advance analyticsm known as BsR or base runs. This statistic was designed by David Smyth and estimates the amount of runs a team SHOULD score, which made a unique approach as the data set provided did not include runs. The formula is as follows:
 
-- INSERT WRITEUP HERE
+BSR = A*B/(B+C) +D where:
+     A = TEAM_BATTING_1B + TEAM_BATTING_2B + TEAM_BATTING_3B + TEAM_BATTING_BB
+     B = 1.02*(1.4*TEAM_TOTAL_BASES -0.6*TEAM_BATTING_H + 0.1*TEAM_BATTING_BB)
+     C = AT BATS - TEAM_BATTING_H (which we approximated with 3*TEAM_BATTING_H as the average batting average is around 0.250)
+     D = TEAM_BATTING_HR
+    
+Since we eliminated the value of TEAM_BATTING_H we simply summed up singles, doubles, triples and home runs in the actual code, and the approach for TEAM_TOTAL_BASES is described in model 2.  The data for BSR exhibit a fairly normal distribution.
+
+Insert BSR histogram here??
+
+Since BSR is a combination of all of the batting variables, we simply eliminated them and created a very strong model on the first iteration.  All p-values were very low, and the variation are all below 5 showing no probems with collinearity.  The characteristic equation indicated by the model is as follows:
+
+TARGET_WINS = 40.689953 + (0.062185 * BSR)
+                        - (0.116618 * TEAM_FIELDING_DP)
+                        - (0.058867 * TEAM_FIELDING_E)
+                        + (0.60318 * TEAM_BASERUN_SB)
+                        - (0.011451 * TEAM_PITCHING_SO)
+                        + (0.019421 * TEAM_PITCHING_H)
+                        - (0.017615 * TEAM_PITCHING_BB)
+
+RSE =       11.99  on 2164 deg. of freedom  
+R^2 =       0.3229 
+Adj. R^2 =  0.3207 
+F Stat. =   147.4    
+MSE =       143.7  
+
+The coefficients for this model overall madke a lot of sense.  Errors and pitching walks contribute to fewer wins, and stolen bases and the BSR metric have strong influence on increasing wins.  Double plays do habve a slightly negative value, although this could be explained by a team allowing a large number of baserunners.     The positive impact of allowing pitcvhing hits was puzzling.
+
 
 # -------------------------------------------------------
 
@@ -406,6 +431,18 @@ As we can see, the coefficient for TEAM_FIELDING_E has changed from negative to 
 
 # Part 4. Select Models
 
+As we compared our models, it was clear that the two strongest were the total bases plus model (#3) and the sabermetrics model (#4).  Models 1 and 2 were rejected for reasons explained in the model description, and so we need to compare the two models as shown in the chart below:  
+
+  Metric     | Total Bases  | Sabermetrics
+-------------|--------------|-------------
+  RSE        | 11.99        | 12.12
+  R^2        | 0.3229       | 0.2944
+  Adj. R^2   | 0.3207       | 0.2931
+  F Stat.    | 147.4        | 225.5
+  MSE        | 143.7        | 145
+
+Following our data analysis both models seem to have no issues with collinearlty.  As the table shows, the decision is not clear, as the sabermetrics model had the better R^2 and RSE values, while the Total Bases model had the better F statistic.  While both models obviously reject the null hypothesis, the total bases model has a higher value showing a better ratio.  This coupled with the fact that the total bases model is simpler and teh coefficients all make perfect sense, we decided to select that model over the sbaermetrics model, sacrificing a little of R^2 value for the higher F statistic, simplicity and more logical coefficients.
+  
 To test our models, we needed an evaluation data set with NA's imputed. We checked the imputation output to ensure it conformed with the actual distribution of each of the impacted variables in the EVAL set. 
 
 The EVAL data set with the NA's filled can be found here:
