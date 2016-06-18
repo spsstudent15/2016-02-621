@@ -15,7 +15,8 @@ library(alr3)
 library(MASS)
 ```
 
-```{r, eval=TRUE, include=FALSE}
+
+```{r,eval=TRUE, include=FALSE}
 
 # read EVALUATION data set
 eval_data <- read.csv("https://raw.githubusercontent.com/jtopor/CUNY-MSDA-621/master/HW-1/moneyball-evaluation-data.csv")
@@ -45,7 +46,7 @@ eval_data$TARGET_WINS <- 0
 
 #####Eliminate HBP, CS, and pitching HR's.
 
-```{r, eval=TRUE, include=FALSE}
+```{r,eval=TRUE,include=FALSE}
 mb <- mb_e1[,-c(9,10,12)]
 # summary(mb)
 
@@ -53,8 +54,9 @@ eval_data <- eval_data[,-c(8,9,11)]
 # summary(eval_data)
 ```
 
+
 #####Build model for batting SO using Gelman approach
-```{r, eval=TRUE, include=FALSE}
+```{r,eval=TRUE,include=FALSE}
 
 #take out double plays + pitching SO + SB as data set is incomplete + Wins as they are not present in the evaluation data
 
@@ -129,9 +131,9 @@ eval_data.1$TEAM_BATTING_SO <- eval.BSO.imp
 ```
 
 
-#####Build model for Pitching SO
+#Build model for Pitching SO
 
-```{r, eval=TRUE, include=FALSE}
+```{r,eval=TRUE, include=FALSE}
 #take out double plays + SB as data set is incomplete and wins as they are not present in evaluation data
 
 PSO.1 <- lm(data=mb1, TEAM_PITCHING_SO~. - INDEX -TEAM_FIELDING_DP -TEAM_BASERUN_SB - TARGET_WINS)
@@ -192,7 +194,7 @@ eval_data.2$TEAM_PITCHING_SO <- eval.PSO.imp
 ```
 
 #####Build model for SB
-```{r, eval=TRUE, include=FALSE}
+```{r,eval=TRUE,include=FALSE}
 #Take out DP as incomplete data and target wins
 SB.1 <- lm(data=mb2, TEAM_BASERUN_SB~. -INDEX -TEAM_FIELDING_DP - TARGET_WINS)
 summary(SB.1)
@@ -266,7 +268,7 @@ eval_data.3$TEAM_BASERUN_SB <- eval.SB.imp
 ```
 
 #####Build model to replace DP
-```{r, eval=TRUE, include=FALSE}
+```{r,eval=TRUE,include=FALSE}
 
 #remove target wins
 DP.1 <- lm(data=mb3, TEAM_FIELDING_DP~. - INDEX -TARGET_WINS)
@@ -357,9 +359,9 @@ eval_data.4$TEAM_FIELDING_DP <- eval.DP.imp
 ```
 
 
-#####Eliminate ahistorical outliers - DO THIS FOR THE EVAL DATA AS WELL
+#####Eliminate unhistorical outliers - DO THIS FOR THE EVAL DATA AS WELL
 
-```{r, eval=TRUE, include=FALSE}
+```{r,eval=TRUE,include=FALSE}
 
 # check rowcount before removal of outliers
 nrow(mb4)
@@ -419,29 +421,26 @@ rownames(eval_data.4) <- 1:nrow(eval_data.4)
 # now drop dummy column from evaluation data
 # eval_data.4 <- eval_data.4[,-14]
 
-
 # create CSV files containing updated data sets
-#SMK commented out for now-doesn't work on a mac
-#write.csv(mb7, file = "C:/SQLData/621-HW1-Clean-Data.csv", row.names = FALSE, col.names = TRUE)
+write.csv(mb7, file = "/Users/scottkarr/IS621Summer2016/HW1/621-HW1-Clean-Data.csv", row.names = FALSE, col.names = TRUE)
 
-#write.csv(eval_data.4, file = "C:/SQLData/621-HW1-Clean-EvalData-.csv", row.names = FALSE, col.names = TRUE)
+write.csv(eval_data.4, file = "/Users/scottkarr/IS621Summer2016/HW1/621-HW1-Clean-EvalData-.csv", row.names = FALSE, col.names = TRUE)
 ```
 
 # SINGLE PREDICTOR ANALYSIS & TRANSFORMATIONS
-#####Model SMK Generlized Equation  
+#####Model SMK Generlized Equation
 Review descriptive statistics to confirm each variable is within acceptable bounds and 
 contains no missing data.  Review Density plots of 13 variables for skewness to identify
 which may require transformation.  
 
-
 ```{r full, eval = TRUE,include=FALSE, echo=FALSE}
 #assign model to "clean" data set 
 lm.smk <- mb7
-
 #remove bad leverage points from diagnostic tests
-lm.smk <- lm.smk[-c(1737,1920,226,391,385,1702,840,602,1928,1937,2109,2128,269,711,125,2124,814,1624),]
+lm.smk <- lm.smk[-c(1737,1920,226,391,385,1702,840,602,1928,1937,2109,2128,269,711,125),]
 # now renumber rows of dataframe so that there are no gaps in row numbers
 rownames(lm.smk) <- 1:nrow(lm.smk)
+nrow(lm.smk)
 
 #SINGLES:
 par(mfrow=c(2,3))
@@ -486,8 +485,7 @@ plot(mb.3B,StanRes1,xlab="Triples",ylab="Standardized Residuals");abline(lsfit(m
 qqnorm(mb.3B,ylab="Y");qqline(mb.3B,lty=2,col=2)
 ##TRANSFORMATION
 powerTransform(mb.3B, family="bcPower")$lambda# round(-0.03308475) => (1/y^30)
-#no transformation, used in Slugging
-tmb.3B <- mb.3B#^(-1/33)
+tmb.3B <- mb.3B^(-30)
 plot(density(tmb.3B),main="Triples");rug(tmb.3B)
 plot(tmb.3B,StanRes1,xlab="Triples",ylab="Standardized Residuals");abline(lsfit(tmb.3B,StanRes1),lty=2,col=2)
 qqnorm(tmb.3B,ylab="Y");qqline(tmb.3B,lty=2,col=2)
@@ -503,8 +501,7 @@ plot(mb.HR,StanRes1,xlab="Homeruns",ylab="Standardized Residuals");abline(lsfit(
 qqnorm(mb.HR,ylab="Y");qqline(mb.HR,lty=2,col=2)
 ##TRANSFORMATION
 powerTransform(mb.HR, family="bcPower")$lambda# round(0.6348318) => y^(2/3)
-#no transformation, used in slugging
-tmb.HR <- mb.HR#^(2/3)
+tmb.HR <- mb.HR^(2/3)
 plot(density(tmb.HR),main="Homeruns");rug(tmb.HR)
 plot(tmb.HR,StanRes1,xlab="Homeruns",ylab="Standardized Residuals");abline(lsfit(tmb.HR,StanRes1),lty=2,col=2)
 qqnorm(tmb.HR,ylab="Y");qqline(tmb.HR,lty=2,col=2)
@@ -512,15 +509,15 @@ qqnorm(tmb.HR,ylab="Y");qqline(tmb.HR,lty=2,col=2)
 #SLUGGING
 par(mfrow=c(2,3))
 mW  <- lm.smk$TARGET_WINS
-mb.SL <- lm.smk$TEAM_BATTING_HR + 2 * lm.smk$TEAM_BATTING_3B
+mb.SL <- lm.smk$TEAM_BATTING_HR + 2 * lm.smk$TEAM_BATTING_3B 
 m1 <- lm(mW~mb.SL, data = lm.smk)
 StanRes1 <- rstandard(m1)
 plot(density(mb.SL),main="Slugging");rug(mb.SL)
 plot(mb.SL,StanRes1,xlab="Slugging",ylab="Standardized Residuals");abline(lsfit(mb.SL,StanRes1),lty=2,col=2)
 qqnorm(mb.SL,ylab="Y");qqline(mb.SL,lty=2,col=2)
 ##TRANSFORMATION
-powerTransform(mb.SL, family="bcPower")$lambda# round(0.5663934 ) => y^(3/5)
-tmb.SL <- mb.SL^(3/5)
+powerTransform(mb.SL, family="bcPower")$lambda# round(0.5562253) => y^(.5)
+tmb.SL <- sqrt(mb.SL)
 plot(density(tmb.SL),main="Slugging");rug(tmb.SL)
 plot(tmb.SL,StanRes1,xlab="Slugging",ylab="Standardized Residuals");abline(lsfit(tmb.SL,StanRes1),lty=2,col=2)
 qqnorm(tmb.SL,ylab="Y");qqline(tmb.SL,lty=2,col=2)
@@ -569,7 +566,6 @@ qqnorm(mb.SB,ylab="Y");qqline(mb.SB,lty=2,col=2)
 ##TRANSFORMATION
 powerTransform(mb.SB, family="bcPower")$lambda# round(-0.03916886) => y^(-1/25)
 tmb.SB <- mb.SB^(-1/25)
-100^(-1/25)
 plot(density(tmb.SB),main="Stolen Bases");rug(tmb.SB)
 plot(tmb.SB,StanRes1,xlab="Stolen Bases",ylab="Standardized Residuals");abline(lsfit(tmb.SB,StanRes1),lty=2,col=2)
 qqnorm(tmb.SB,ylab="Y");qqline(tmb.SB,lty=2,col=2)
@@ -629,8 +625,7 @@ plot(mf.E,StanRes1,xlab="Fielding Errors",ylab="Standardized Residuals");abline(
 qqnorm(mf.E, ylab = "Y");qqline(mf.E, lty = 2, col=2)
 ##TRANSFORMATION
 powerTransform(mf.E,family="bcPower")$lambda#round(-0.939657) => (-9/10)
-#no transformation, used in Fielding Yield
-tmf.E <- mf.E#^(-(9/10))
+tmf.E <- mf.E^(-(9/10))
 plot(density(tmf.E),main="Fielding Errors");rug(tmf.E)
 plot(tmf.E,StanRes1,xlab="Fielding Errors",ylab="Standardized Residuals");abline(lsfit(tmf.E,StanRes1),lty=2,col=2)
 qqnorm(tmf.E,ylab="Y");qqline(tmf.E,lty=2,col=2)
@@ -645,8 +640,7 @@ plot(mf.DP,StanRes1,xlab="Fielding Doubleplays",ylab="Standardized Residuals");a
 qqnorm(mf.DP, ylab = "Y");qqline(mf.DP,lty = 2, col=2)
 ##TRANSFORMATION
 powerTransform(mf.DP,family="bcPower")$lambda# round(1.49645) => 1.5
-#no transformation, used in Fielding Yield
-tmf.DP <- mf.DP#^(3/2)
+tmf.DP <- mf.DP^(3/2)
 plot(density(tmf.DP),main="Fielding Doubleplays");rug(tmf.DP)
 plot(tmf.DP,StanRes1,xlab="Fielding Doubleplays",ylab="Standardized Residuals");abline(lsfit(tmf.DP,StanRes1),lty=2,col=2)
 qqnorm(tmf.DP,ylab="Y");qqline(tmf.DP,lty=2,col=2)
@@ -669,35 +663,8 @@ qqnorm(tmf.FY,ylab="Y");qqline(tmf.FY,lty=2,col=2)
 par(mfrow=c(1,1))
 ```
 
-#Transformation Example 
-box-cox method used with g(x) = y^(-1/25)
-```{r eval=TRUE, include=TRUE}
-#STOLEN BASES:
-par(mfrow=c(2,3))
-mW  <- lm.smk$TARGET_WINS
-mb.SB <- lm.smk$TEAM_BASERUN_SB
-m1 <- lm(mW~mb.SB, data = lm.smk)
-StanRes1 <- rstandard(m1)
-plot(density(mb.SB),main="Stolen Bases");rug(mb.SB)
-plot(mb.SB,StanRes1,xlab="Stolen Bases",ylab="Standardized Residuals");abline(lsfit(mb.SB,StanRes1),lty=2,col=2)
-qqnorm(mb.SB,ylab="Y");qqline(mb.SB,lty=2,col=2)
-##TRANSFORMATION
-powerTransform(mb.SB, family="bcPower")$lambda# round(-0.03916886) => y^(-1/25)
-tmb.SB <- mb.SB^(-1/25)
-100^(-1/25)
-plot(density(tmb.SB),main="Stolen Bases");rug(tmb.SB)
-plot(tmb.SB,StanRes1,xlab="Stolen Bases",ylab="Standardized Residuals");abline(lsfit(tmb.SB,StanRes1),lty=2,col=2)
-qqnorm(tmb.SB,ylab="Y");qqline(tmb.SB,lty=2,col=2)
-```
-
 ##### Evaluate Correlations  
 Evaluate Correlation between predictors so as to not introduce collinearity into the model.
-This matrix is used to select variables into the models with minimum correlation with other
-predictors so as to not overfit the model with proxies to the same attribute i.e. Pitching
-Strikeouts and Batting Strikeouts.
-
-Within the models, we use the diagnostic tool "vif" to determine the magnitude of the correlation
-between currently selected predictors and remove those that exceed 5 during the next iteration.
 ```{r correlation, eval=TRUE, echo=FALSE}
 # assign model one "lm.1" to data set with all NA's imputed and "bad" leverage points removed
 par(cex = 0.65)
@@ -708,6 +675,7 @@ corrplot(
     addshade="positive",
     addCoef.col = rgb(0,0,0,alpha=0.3),
     addCoefasPercent = TRUE)
+nrow(lm.smk)
 ```
 
 ##### Model Selection Strategy
@@ -724,12 +692,15 @@ Diez, D.M., Barr, C.D., & Çetinkaya-Rundel, M. (2015). OpenIntro Statistics (3r
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
-Index <- lm.smk$INDEX
 p.Hits <- tmp.H 
 p.Walks <- tmp.BB
+m1 <- lm(Wins ~ p.Hits+p.Walks)
 
-m1 <- lm(Wins ~ -Index+p.Hits+p.Walks)
+#PAIRWISE PLOT
+par(mfrow=c(1,1))
+pairs(Wins ~ p.Hits+p.Walks)
 
+#MODEL DIAGNOSTICS
 summary(m1)
 
 #DIAGNOSTIC1. show collinearity of variables after checking p-values to < 0.05.
@@ -770,18 +741,42 @@ plot(m1)
 # normal distribution, and uniform distribution of residuals
 ```
 
-#####Add b.Singles & b.Slugging
+#####Add b.Singles & b.Doubles
 ```{r m1-interation2,eval=TRUE,include=FALSE}
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
-Index <- lm.smk$INDEX
 p.Hits <- tmp.H 
 p.Walks <- tmp.BB
 b.Singles <- tmb.1B
-b.Slugging <- tmb.SL
+b.Doubles <- tmb.2B
+m1 <- lm(Wins ~ p.Hits+p.Walks+b.Singles+b.Doubles)
 
-m1 <- lm(Wins ~ -Index+p.Hits+p.Walks+b.Singles+b.Slugging)
+#PAIRWISE PLOT
+par(mfrow=c(1,1))
+pairs(Wins ~ p.Hits+p.Walks+b.Singles+b.Doubles)
+
+#MODEL DIAGNOSTICS
+summary(m1)
+
+#DIAGNOSTIC1. show collinearity of variables after checking p-values to < 0.05.
+vif(m1)
+#p-values of p.Hits >  0.05 so it gets removed
+```
+
+#####Removed p.Hits
+```{r m1-interation3,eval=TRUE,include=FALSE}
+#VARIABLES
+#variables have been transformed first as individual predictors
+Wins  <- mW
+p.Walks <- tmp.BB
+b.Singles <- tmb.1B
+b.Doubles <- tmb.2B
+m1 <- lm(Wins ~ p.Walks+b.Singles+b.Doubles)
+
+#PAIRWISE PLOT
+par(mfrow=c(1,1))
+pairs(Wins ~ p.Walks+b.Singles+b.Doubles)
 
 #MODEL DIAGNOSTICS
 summary(m1)
@@ -810,10 +805,9 @@ plot(m1)
 #DIAGNOSTIC4.  generate Standardized Residual Plots against each predictor
 par(mfrow=c(2,2))
 StanRest <- rstandard(m1)
-plot(p.Hits,StanRest,ylab="Standardized Residuals")
 plot(p.Walks,StanRest,ylab="Standardized Residuals")
 plot(b.Singles,StanRest,ylab="Standardized Residuals")
-plot(b.Slugging,StanRest,ylab="Standardized Residuals")
+plot(b.Doubles,StanRest,ylab="Standardized Residuals")
 plot(m1$fitted.values,StanRest,ylab="Standardized Residuals",xlab="Fitted Values")
 #Examine plots for constant variability of residuals across ALL predictor. 
 # uniform distribution of residuals
@@ -826,49 +820,29 @@ plot(m1)
 # normal distribution, and uniform distribution of residuals
 ```
 
-#####Added Stolen Bases and Fielding
-```{r m1-interation3,eval=TRUE,include=FALSE}
-#VARIABLES
-#variables have been transformed first as individual predictors
-Wins  <- mW
-Index <- lm.smk$INDEX
-p.Hits <- tmp.H 
-p.Walks <- tmp.BB
-b.Singles <- tmb.1B
-b.Slugging <- tmb.SL
-b.StolenBases <- tmb.SB
-f.Fielding <- tmf.FY
-
-m1 <- lm(Wins ~ -Index+p.Hits+p.Walks+b.Singles+b.Slugging+b.StolenBases+f.Fielding)
-
-#MODEL DIAGNOSTICS
-summary(m1)
-
-#DIAGNOSTIC1. show collinearity of variables after checking p-values to < 0.05.
-vif(m1)
-#p-values for p.Hits > 0.05 so remove it
-```
-
-#####Remove p.Hits
+#####Added Stolen Bases and Double Plays
 ```{r m1-interation4,eval=TRUE,include=FALSE}
+nrow(lm.smk)
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
-Index <- lm.smk$INDEX
 p.Walks <- tmp.BB
 b.Singles <- tmb.1B
-b.Slugging <- tmb.SL
+b.Doubles <- tmb.2B
 b.StolenBases <- tmb.SB
-f.Fielding <- tmf.FY
+f.DoublePlays <- tmf.DP
+m1 <- lm(Wins ~ p.Walks+b.Singles+b.Doubles+b.StolenBases+f.DoublePlays)
 
-m1 <- lm(Wins ~ p.Walks+b.Singles+b.Slugging+b.StolenBases+f.Fielding)
+#PAIRWISE PLOT
+par(mfrow=c(1,1))
+pairs(Wins ~ p.Walks+b.Singles+b.Doubles+b.StolenBases+f.DoublePlays)
 
 #MODEL DIAGNOSTICS
 summary(m1)
 
 #DIAGNOSTIC1. show collinearity of variables after checking p-values to < 0.05.
 vif(m1)
-#p-values are all < 0.05 and no VIFs  > 5 and adjusted $R^2$ increased
+#p-values are all < 0.05 and no VIFs  > 5
 
 #DIAGNOSTIC2.  generate Added Variable Plots: should show linear relationship between response & predictors:
 par(mfrow=c(2,2))
@@ -878,7 +852,7 @@ avPlots(m1, ~.,ask=FALSE, id.n = 2)
 #DIAGNOSTIC3.  generate Summary Diagnostic Plots
 par(mfrow=c(2,2))
 plot(m1)
-##Upper Left plot "Residuals vs Fitted" 
+#Upper Left plot "Residuals vs Fitted" 
 # clear predictable pattern
 # uniform variability for all fitted values
 #Upper Right 
@@ -892,9 +866,9 @@ par(mfrow=c(2,2))
 StanRest <- rstandard(m1)
 plot(p.Walks,StanRest,ylab="Standardized Residuals")
 plot(b.Singles,StanRest,ylab="Standardized Residuals")
-plot(b.Slugging,StanRest,ylab="Standardized Residuals")
+plot(b.Doubles,StanRest,ylab="Standardized Residuals")
 plot(b.StolenBases,StanRest,ylab="Standardized Residuals")
-plot(f.Fielding,StanRest,ylab="Standardized Residuals")
+plot(f.DoublePlays,StanRest,ylab="Standardized Residuals")
 plot(m1$fitted.values,StanRest,ylab="Standardized Residuals",xlab="Fitted Values")
 #Examine plots for constant variability of residuals across ALL predictor. 
 # uniform distribution of residuals
@@ -904,6 +878,8 @@ par(mfrow = c(2,2))
 plot(m1$fitted.values,Wins,xlab="Fitted Values",ylab=expression(Wins^lambda))
 abline(lsfit(m1$fitted.values,Wins))
 plot(m1)
+#If plot doesn't shows a linear relationship with no pattern or skew the model lacks normality.
+
 # normal distribution, and uniform distribution of residuals
 ```
 
@@ -912,71 +888,89 @@ plot(m1)
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
-Index <- lm.smk$INDEX
 p.Walks <- tmp.BB
 b.Singles <- tmb.1B
-b.Slugging <- tmb.SL
+b.Doubles <- tmb.2B
 b.StolenBases <- tmb.SB
-f.Fielding <- tmf.FY
+f.DoublePlays <- tmf.DP
 b.Walks <- tmb.BB
-p.Strikeouts <-tmp.SO
-m1 <- lm(Wins ~ -Index+p.Walks+b.Singles+b.Slugging+b.StolenBases+f.Fielding+b.Walks+p.Strikeouts)
+p.StrikeOuts <- tmp.SO
+m1 <- lm(Wins ~ p.Walks+b.Singles+b.Doubles+b.StolenBases+f.DoublePlays+b.Walks+p.StrikeOuts)
 
+#PAIRWISE PLOT
+par(mfrow=c(1,1))
+pairs(Wins ~ p.Walks+b.Singles+b.Doubles+b.StolenBases+f.DoublePlays+b.Walks+p.StrikeOuts)
 
 #MODEL DIAGNOSTICS
 summary(m1)
 
 #DIAGNOSTIC1. show collinearity of variables after checking p-values to < 0.05.
 vif(m1)
-#p-values are all < 0.05 and but b.Walks VIFs  > 5 for so remove it
+#p-values are all < 0.05 but VIFs  > 5
+#highest vif is b.Walks so it gets removed
 ```
 
-\[
-\begin{aligned}
-\widehat{wins} &= \hat{\beta}_0 + 
-                    \hat{\beta}_1 \times p.Walks 
-                    \hat{\beta}_2 \times b.Singles + 
-                    \hat{\beta}_3 \times b.Slugging +
-                    \hat{\beta}_4 \times b.Stolen Bases +                    
-                    \end{aligned}
-\]
-\[
-\begin{aligned}
-                    \hat{\beta}_5 \times b.Fielding Yield +  
-                    \hat{\beta}_6 \times p.Strike Outs +
-                    \end{aligned}
-\]
-
 #####Remove b.Walks
-```{r m1-interation6,eval=TRUE,include=TRUE}
+```{r m1-interation6,eval=TRUE,include=FALSE}
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
-Index <- lm.smk$INDEX
 p.Walks <- tmp.BB
 b.Singles <- tmb.1B
-b.Slugging <- tmb.SL
-b.StolenBases <- tmb.SB
-f.Fielding <- tmf.FY
-p.Strikeouts <-tmp.SO
-m1 <- lm(Wins ~ -Index+p.Walks+b.Singles+b.Slugging+b.StolenBases+f.Fielding+p.Strikeouts)
+b.Doubles <- tmb.2B
+b.StolenBases <- tmb.SB 
+f.DoublePlays <- tmf.DP
+p.StrikeOuts <- tmp.SO
+m1 <- lm(Wins ~ p.Walks+b.Singles+b.Doubles+b.StolenBases+f.DoublePlays+p.StrikeOuts)
+
+#PAIRWISE PLOT
+par(mfrow=c(1,1))
+pairs(Wins ~ p.Walks+b.Singles+b.Doubles+b.StolenBases+f.DoublePlays+p.StrikeOuts)
 
 #MODEL DIAGNOSTICS
 summary(m1)
 
 #DIAGNOSTIC1. show collinearity of variables after checking p-values to < 0.05.
 vif(m1)
-#p-values are all < 0.05 and no VIFs  > 5 and adjusted $R^2$ increased
+#p-value for b.Walks > 0.05 all VIFs < 5
+```
+
+#####Add b.StrikeOuts, & b.Slugging
+```{r m1-interation7,eval=TRUE,include=FALSE}
+nrow(lm.smk)
+#VARIABLES
+#variables have been transformed first as individual predictors
+Wins  <- mW
+p.Walks <- tmp.BB
+b.Singles <- tmb.1B
+b.Doubles <- tmb.2B
+b.StolenBases <- tmb.SB
+f.DoublePlays <- tmf.DP
+b.StrikeOuts <- tmb.SO
+b.Slugging <- tmb.SL
+m1 <- lm(Wins ~ p.Walks+b.Singles+b.Doubles+b.StolenBases+f.DoublePlays+b.StrikeOuts+b.Slugging)
+
+#PAIRWISE PLOT
+par(mfrow=c(1,1))
+pairs(Wins ~ p.Walks+b.Singles+b.Doubles+b.StolenBases+b.StrikeOuts+b.Slugging)
+
+#MODEL DIAGNOSTICS
+summary(m1)
+
+#DIAGNOSTIC1. show collinearity of variables after checking p-values to < 0.05.
+vif(m1)
+#p-values are all < 0.05 and no VIFs  > 5
 
 #DIAGNOSTIC2.  generate Added Variable Plots: should show linear relationship between response & predictors:
 par(mfrow=c(2,2))
 avPlots(m1, ~.,ask=FALSE, id.n = 2)
+
 #relationship is linear
 
 #DIAGNOSTIC3.  generate Summary Diagnostic Plots
 par(mfrow=c(2,2))
 plot(m1)
-##Upper Left plot "Residuals vs Fitted" 
+#Upper Left plot "Residuals vs Fitted" 
 # clear predictable pattern
 # uniform variability for all fitted values
 #Upper Right 
@@ -990,10 +984,11 @@ par(mfrow=c(2,2))
 StanRest <- rstandard(m1)
 plot(p.Walks,StanRest,ylab="Standardized Residuals")
 plot(b.Singles,StanRest,ylab="Standardized Residuals")
-plot(b.Slugging,StanRest,ylab="Standardized Residuals")
+plot(b.Doubles,StanRest,ylab="Standardized Residuals")
 plot(b.StolenBases,StanRest,ylab="Standardized Residuals")
-plot(f.Fielding,StanRest,ylab="Standardized Residuals")
-plot(p.Strikeouts,StanRest,ylab="Standardized Residuals")
+plot(f.DoublePlays,StanRest,ylab="Standardized Residuals")
+plot(b.StrikeOuts,StanRest,ylab="Standardized Residuals")
+plot(b.Slugging,StanRest,ylab="Standardized Residuals")
 plot(m1$fitted.values,StanRest,ylab="Standardized Residuals",xlab="Fitted Values")
 #Examine plots for constant variability of residuals across ALL predictor. 
 # uniform distribution of residuals
@@ -1006,9 +1001,93 @@ plot(m1)
 # normal distribution, and uniform distribution of residuals
 ```
 
-```{r, eval=TRUE, include=FALSE}
-#predict(m1, eval_data,interval="predict")
+#####Add b.Fielding
+\[
+\begin{aligned}
+\widehat{wins} &= \hat{\beta}_0 + 
+                    \hat{\beta}_1 \times p.Walks 
+                    \hat{\beta}_2 \times b.Singles + 
+                    \hat{\beta}_3 \times b.Doubles +
+                    \hat{\beta}_4 \times b.Stolen Bases +                    
+                    \end{aligned}
+\]
+\[
+\begin{aligned}
+                    \hat{\beta}_5 \times f.Double Plays +  
+                    \hat{\beta}_6 \times b.Strike Outs +
+                    \hat{\beta}_7 \times b.Slugging +   
+                    \hat{\beta}_8 \times b.Fielding Yield +                       
+                    \end{aligned}
+\]
+nrow(lm.smk)
+```{r m1-interation8,eval=TRUE}
+#VARIABLES
+#variables have been transformed first as individual predictors
+Wins  <- mW
+Index <- lm.smk$INDEX 
+p.Walks <- tmp.BB
+b.Singles <- tmb.1B
+b.Doubles <- tmb.2B
+b.StolenBases <- tmb.SB
+b.StrikeOuts <- tmb.SO
+b.Slugging <- tmb.SL
+f.Fielding <- tmf.FY
+
+m1 <- lm(Wins ~ -Index+p.Walks+b.Singles+b.Doubles+b.StolenBases+b.StrikeOuts+b.Slugging+f.Fielding)
+
+#PAIRWISE PLOT
+par(mfrow=c(1,1))
+pairs(Wins ~ p.Walks+b.Singles+b.StolenBases+b.StrikeOuts+b.Slugging+f.Fielding)
+
+#MODEL DIAGNOSTICS
+summary(m1)
+
+#DIAGNOSTIC1. show collinearity of variables after checking p-values to < 0.05.
+vif(m1)
+#p-values are all < 0.05 and no VIFs  > 5
+
+#DIAGNOSTIC2.  generate Added Variable Plots: should show linear relationship between response & predictors:
+par(mfrow=c(2,2))
+avPlots(m1, ~.,ask=FALSE, id.n = 2)
+
+#relationship is linear
+
+#DIAGNOSTIC3.  generate Summary Diagnostic Plots
+par(mfrow=c(2,2))
+plot(m1)
+#Upper Left plot "Residuals vs Fitted" 
+# clear predictable pattern
+# uniform variability for all fitted values
+#Upper Right 
+#  normality in residuals
+#Lower Right plot "Residuals vs. Leverage"
+#  normal distribution, and uniform distribution of residuals
+#  no significant leverage points
+
+#DIAGNOSTIC4.  generate Standardized Residual Plots against each predictor
+par(mfrow=c(2,2))
+StanRest <- rstandard(m1)
+plot(p.Walks,StanRest,ylab="Standardized Residuals")
+plot(b.Singles,StanRest,ylab="Standardized Residuals")
+plot(b.Doubles,StanRest,ylab="Standardized Residuals")
+plot(b.StolenBases,StanRest,ylab="Standardized Residuals")
+plot(f.DoublePlays,StanRest,ylab="Standardized Residuals")
+plot(b.StrikeOuts,StanRest,ylab="Standardized Residuals")
+plot(b.Slugging,StanRest,ylab="Standardized Residuals")
+plot(f.Fielding,StanRest,ylab="Standardized Residuals")
+plot(m1$fitted.values,StanRest,ylab="Standardized Residuals",xlab="Fitted Values")
+#Examine plots for constant variability of residuals across ALL predictor. 
+# uniform distribution of residuals
+
+#DIAGNOSTIC5.  generate plot of Y "response variable"" against Fitted Values "regression model"
+par(mfrow = c(2,2))
+plot(m1$fitted.values,Wins,xlab="Fitted Values",ylab=expression(Wins^lambda))
+abline(lsfit(m1$fitted.values,Wins))
+plot(m1)
+# normal distribution, and uniform distribution of residuals
+```
+
+```{r}
 #pred_eval.m1 <- round(predict(m1, eval_data))
 #eval.BSO.imp <- impute(eval_data$TARGET_WINS, pred_eval.m1)
-rm(list=ls()) #will remove ALL objects 
 ```
