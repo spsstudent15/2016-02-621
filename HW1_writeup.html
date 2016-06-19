@@ -109,7 +109,6 @@ $(document).ready(function () {
 <ul>
 <li><a href="#part-1-data-exploration">Part 1: Data Exploration</a><ul>
 <li><a href="#data-summary">Data Summary</a></li>
-<li><a href="#data-plots">Data Plots</a></li>
 <li><a href="#correlation-plot">Correlation Plot</a></li>
 </ul></li>
 <li><a href="#part-2-data-preparation">Part 2: Data Preparation</a><ul>
@@ -119,10 +118,8 @@ $(document).ready(function () {
 <li><a href="#filling-missing-values-in-the-training-data-set">Filling Missing values in the Training Data Set</a></li>
 <li><a href="#filling-missing-values-in-the-evaluation-data-set">Filling Missing Values in the Evaluation Data Set</a></li>
 </ul></li>
-<li><a href="#removal-of-extreme-outliers-from-data-sets">Removal of Extreme Outliers From Data Sets</a><ul>
-<li><a href="#extreme-outlier-removal-training-data">Extreme Outlier Removal: Training Data</a></li>
-<li><a href="#extreme-outlier-removal-evaluation-data">Extreme Outlier Removal: Evaluation Data</a></li>
-</ul></li>
+<li><a href="#removal-of-extreme-outliers-from-the-training-data-set">Removal of Extreme Outliers From the Training Data Set</a></li>
+<li><a href="#results-of-imputation-for-missing-values-and-outlier-removal-process">Results of Imputation for Missing Values and Outlier Removal Process</a></li>
 <li><a href="#other-data-prepation-transformations-refer-to-model-descriptions">Other Data Prepation Transformations: Refer to Model Descriptions</a></li>
 </ul></li>
 <li><a href="#part-3-build-models">Part 3: Build Models</a><ul>
@@ -262,14 +259,28 @@ $(document).ready(function () {
 <td align="left">240</td>
 <td align="left">750</td>
 <td align="left">0</td>
-<td align="left">697</td>
-<td align="left">697</td>
-<td align="left">1.97</td>
-<td align="left">5.49</td>
-<td align="left">1.90</td>
-<td align="left">131</td>
+<td align="left">1399</td>
+<td align="left">1399</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">102</td>
 </tr>
 <tr class="odd">
+<td align="left">TEAM_BASERUN_SB</td>
+<td align="left">2145</td>
+<td align="left">125</td>
+<td align="left"></td>
+<td align="left">101</td>
+<td align="left">0</td>
+<td align="left">697</td>
+<td align="left">697</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">131</td>
+</tr>
+<tr class="even">
 <td align="left">TEAM_BASERUN_CS</td>
 <td align="left">1504</td>
 <td align="left">53</td>
@@ -283,7 +294,7 @@ $(document).ready(function () {
 <td align="left">0.59</td>
 <td align="left">772</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">TEAM_BATTING_HBP</td>
 <td align="left">191</td>
 <td align="left">59</td>
@@ -297,7 +308,7 @@ $(document).ready(function () {
 <td align="left">0.94</td>
 <td align="left">2085</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">TEAM_PITCHING_H</td>
 <td align="left">2276</td>
 <td align="left">1779</td>
@@ -310,7 +321,7 @@ $(document).ready(function () {
 <td align="left">141.84</td>
 <td align="left">29.49</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">TEAM_PITCHING_HR</td>
 <td align="left">2276</td>
 <td align="left">106</td>
@@ -323,7 +334,7 @@ $(document).ready(function () {
 <td align="left">-0.60</td>
 <td align="left">1.28</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">TEAM_PITCHING_BB</td>
 <td align="left">2276</td>
 <td align="left">553</td>
@@ -336,7 +347,7 @@ $(document).ready(function () {
 <td align="left">96.97</td>
 <td align="left">3.49</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">TEAM_PITCHING_SO</td>
 <td align="left">2174</td>
 <td align="left">818</td>
@@ -350,7 +361,7 @@ $(document).ready(function () {
 <td align="left">11.86</td>
 <td align="left">102</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">TEAM_FIELDING_E</td>
 <td align="left">2276</td>
 <td align="left">246</td>
@@ -363,7 +374,7 @@ $(document).ready(function () {
 <td align="left">10.97</td>
 <td align="left">4.77</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">TEAM_FIELDING_DP</td>
 <td align="left">1990</td>
 <td align="left">146</td>
@@ -379,14 +390,83 @@ $(document).ready(function () {
 </tr>
 </tbody>
 </table>
-</div>
-<div id="data-plots" class="section level2">
-<h2>Data Plots</h2>
-<p>Bar Chart or Box Plot of the data</p>
+<p>The first observation of the chart above show that there are missing values in 6 fields. The problem is particularly significant for caught stealing. A survey of box plots show that there are significant outliers in some of the data columns, especially in TEAM_PITCHING_H and TEAM_PITCHING_SO.</p>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
 </div>
 <div id="correlation-plot" class="section level2">
 <h2>Correlation Plot</h2>
-<p>Is the data correlated to the target variable (or to other variables?)</p>
+<p>Using the cor function across the data frame we noticed some strong correlations. TEAM_BATTING_H obviously has some colinearity with TEAM_BATTING_2B, TEAM_BATTING_3B and TEAM_BATTING_HR as these values are a subset of hits. TEAM_BATTING_BB and TEAM_PITCHING_BB have strong correlations and so do TEAM_PITCHING_HR and TEAM_BATTING_HR. Since we are most concerned with wins, the following table shows the correlation when the NA’s are ommited:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Value</th>
+<th align="left">Correlation with Wins</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">TEAM_BATTING_H</td>
+<td align="left">0.46994665</td>
+</tr>
+<tr class="even">
+<td align="left">TEAM_BATTING_2B</td>
+<td align="left">0.31298400</td>
+</tr>
+<tr class="odd">
+<td align="left">TEAM_BATTING_3B</td>
+<td align="left">-0.12434586</td>
+</tr>
+<tr class="even">
+<td align="left">TEAM_BATTING_HR</td>
+<td align="left">0.42241683</td>
+</tr>
+<tr class="odd">
+<td align="left">TEAM_BATTING_BB</td>
+<td align="left">0.46868793</td>
+</tr>
+<tr class="even">
+<td align="left">TEAM_BATTING_SO</td>
+<td align="left">-0.22889273</td>
+</tr>
+<tr class="odd">
+<td align="left">TEAM_BASERUN_SB</td>
+<td align="left">0.01483639</td>
+</tr>
+<tr class="even">
+<td align="left">TEAM_BASERUN_CS</td>
+<td align="left">-0.17875598</td>
+</tr>
+<tr class="odd">
+<td align="left">TEAM_BATTING_HBP</td>
+<td align="left">0.07350424</td>
+</tr>
+<tr class="even">
+<td align="left">TEAM_PITCHING_H</td>
+<td align="left">0.47123431</td>
+</tr>
+<tr class="odd">
+<td align="left">TEAM_PITCHING_HR</td>
+<td align="left">0.42246683</td>
+</tr>
+<tr class="even">
+<td align="left">TEAM_PITCHING_BB</td>
+<td align="left">0.46839882</td>
+</tr>
+<tr class="odd">
+<td align="left">TEAM_PITCHING_SO</td>
+<td align="left">-0.22936481</td>
+</tr>
+<tr class="even">
+<td align="left">TEAM_FIELDING_E</td>
+<td align="left">-0.38668800</td>
+</tr>
+<tr class="odd">
+<td align="left">TEAM_FIELDING_DP</td>
+<td align="left">0.13168916</td>
+</tr>
+</tbody>
+</table>
+<p>As a result of missing data, severe outliers, and collinearity shown above there is a clear need for some data preparation and transformation.</p>
 <p><strong>————————————————————————————————————————–</strong></p>
 </div>
 </div>
@@ -406,6 +486,7 @@ $(document).ready(function () {
 <li><p><strong>TEAM_BASERUN_CS</strong>: This variable is strongly correlated (65.5%) with the TEAM_BASERUN_SB variable and is the 2nd largest source of NA’s in our data set. These combined facts led us to exclude the variable from our analysis.</p></li>
 <li><p><strong>TEAM_PITCHING_HR</strong>: This variable is 97% correlated with TEAM_BATTING_HR. In fact, 815 cases (more than 35% of our total cases) have <em>IDENTICAL</em> values for pitched and batted HR’s. This high degree of correlation may be due to the time series nature of the data: as baseball evolved, more home runs were hit, which naturally causes the number of pitched home runs to increase. The statistics are basically opposite sides of the same coin to a large degree (even if there may be some variability between individual teams in any given year). The fact that these two variables are nearly perfectly correlated indicates that one of them can legitimately be removed from the data set, and we chose <strong>TEAM_PITCHING_HR</strong> since we believe the batting HR metric will be more predictive of TARGET_WINS than will the pitching HR statistic.</p></li>
 </ol>
+<p>These same three variables were subsequently removed from the Evaluation data set to ensure compatibility with our linear models.</p>
 </div>
 <div id="imputation-of-missing-values-nas" class="section level2">
 <h2>Imputation of Missing Values (NA’s)</h2>
@@ -426,22 +507,21 @@ $(document).ready(function () {
 <p>These four imputation regression models were then used to populate missing values for the same variables within the evaluation data set. Clearly, any models we might have constructed for purposes of predicting WINS for the evaluation set would have failed to work on any records within that data set that contained NA’s. Applying the imputation models to the evaluation data allows us to avoid that problem.</p>
 </div>
 </div>
-<div id="removal-of-extreme-outliers-from-data-sets" class="section level2">
-<h2>Removal of Extreme Outliers From Data Sets</h2>
-<div id="extreme-outlier-removal-training-data" class="section level3">
-<h3>Extreme Outlier Removal: Training Data</h3>
+<div id="removal-of-extreme-outliers-from-the-training-data-set" class="section level2">
+<h2>Removal of Extreme Outliers From the Training Data Set</h2>
 <p>We completed our data preparation efforts by eliminating some clearly egregious outliers identified via research through <em>baseball-almanac.com</em>. This approach is suggested by Sheather (p. 57). For example, the record for the most pitching strikeouts in a single season is 1450 by the 2014 Cleveland Indians. Therefore we know that any records having TEAM_PITCHING_SO values above that point is an aberration, and any records containing such values were summarily removed from the data set.</p>
 <p>Similarly, the most errors by team in a single season was 639 by Philadelphia in 1883. Prorating to 162 games we calculated that we should discard any records containing TEAM_FIELDING_E values above 1046.</p>
 <p>The TEAM_PITCHING_H variable also appeared to have numerous egregious outliers. For example, the most offensive hits by a team in a single season was 1730. As such, it is highly unlikely that any pitching staff would surrender more than 3000 hits in a single season since such a total would indicate the team was allowing more than 18 hits per game. As such, any records having a TEAM_PITCHING_H value &gt; 3000 was removed from the data set.</p>
 <p>Removing the egregious outliers resulting in a sum total of 104 records being removed from the training data set. Removal of these outliers helped to normalize our data and thereby improve the expected performance of our linear models.</p>
 </div>
-<div id="extreme-outlier-removal-evaluation-data" class="section level3">
-<h3>Extreme Outlier Removal: Evaluation Data</h3>
-<p>Similar extreme outliers were subsequently removed from the evaluation data set since it is unlikely that any regression models we might have built would have generated realistic predictive results for records containing such outliers. Of the 259 records contained in the evaluation data set, a total of 11 were removed by this process.</p>
-<p><strong><em>As such, our Evaluation data set is comprised of a total of 248 records rather than the 259 records provided in the original data</em></strong>.</p>
-<p>Our Evaluation data set with the NA’s filled and outliers removed can be found here:</p>
+<div id="results-of-imputation-for-missing-values-and-outlier-removal-process" class="section level2">
+<h2>Results of Imputation for Missing Values and Outlier Removal Process</h2>
+<p>The end results of our data transformation process dramatically improved the data as you can see from the following plot. There still are a few outliers but there are on a much smaller scale.</p>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Our training data set with the NA’s filled and the outliers removed can be found here:</p>
+<p><a href="https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-Data.csv" class="uri">https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-Data.csv</a></p>
+<p>Our Evaluation data set with the NA’s filled can be found here:</p>
 <p><a href="https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-EvalData" class="uri">https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-EvalData</a>-.csv</p>
-</div>
 </div>
 <div id="other-data-prepation-transformations-refer-to-model-descriptions" class="section level2">
 <h2>Other Data Prepation Transformations: Refer to Model Descriptions</h2>
@@ -1154,28 +1234,28 @@ $(document).ready(function () {
 <td align="left">86</td>
 </tr>
 <tr class="odd">
+<td align="left">60</td>
+<td align="left">66</td>
+</tr>
+<tr class="even">
 <td align="left">63</td>
 <td align="left">73</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">74</td>
 <td align="left">82</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">83</td>
 <td align="left">71</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">98</td>
 <td align="left">69</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">120</td>
 <td align="left">74</td>
-</tr>
-<tr class="even">
-<td align="left">123</td>
-<td align="left">68</td>
 </tr>
 </tbody>
 </table>
@@ -1187,11 +1267,11 @@ $(document).ready(function () {
 <h1>Part 5. References</h1>
 <div id="bibliography" class="section level2">
 <h2>Bibliography</h2>
-<p>Diez, D.M., Barr, C.D., &amp; Cetinkaya-Rundel, M. (2015). OpenIntro Statistics (3rd Ed).</p>
-<p>Faraway, J. J. (2015). Extending linear models with R, Second Edition. Boca Raton, Fla: Chapman &amp; Hall/CRC.</p>
-<p>Faraway, J. J. (2015). Linear models with R, Second Edition. Boca Raton, Fla: Chapman &amp; Hall/CRC.</p>
-<p>Fox, John, and John Fox. Applied Regression Analysis and Generalized Linear Models. Los Angeles: Sage, 2008. Print.</p>
-<p>Sheather, Simon J. A Modern Approach to Regression with R. New York, NY: Springer, 2009. Internet resource.</p>
+<p>Diez, D.M., Barr, C.D., &amp; Cetinkaya-Rundel, M. (2015). OpenIntro Statistics, Third Edition. Open Source. Print</p>
+<p>Faraway, J. J. (2015). Extending linear models with R, Second Edition. Boca Raton, Fla: Chapman &amp; Hall/CRC. Print</p>
+<p>Faraway, J. J. (2015). Linear models with R, Second Edition. Boca Raton, Fla: Chapman &amp; Hall/CRC. Print</p>
+<p>Fox, John (2016). Applied Regression Analysis and Generalized Linear Models, Third Edition. Los Angeles: Sage. Print.</p>
+<p>Sheather, Simon J. (2009). A Modern Approach to Regression with R. New York, NY: Springer. Print</p>
 </div>
 <div id="resource-links" class="section level2">
 <h2>Resource Links</h2>

@@ -3,8 +3,6 @@ Critical Thinking Group 2 - Armenoush Aslanian-Persico, James Topor, Jeff Nieman
 
 
 
-
-
 __--------------------------------------------------------------------------------------------------------------------------__
 
 # Part 1: Data Exploration
@@ -23,7 +21,8 @@ The original Training data set is comprised of 17 elements and 2277 total observ
 |TEAM_BATTING_3B | 2276  |   55 |   28 |   47 |    0 |   223 |   223 |  1.11 |   1.50   |  0.59 |    
 |TEAM_BATTING_HR | 2276  |  100 |   61 |  102 |    0 |   264 |   264 |  0.19 |  -0.96   |  1.27 |    
 |TEAM_BATTING_BB | 2276  |  502 |  123 |  512 |    0 |   878 |   878 | -1.03 |   2.18   |  2.57 |     
-|TEAM_BATTING_SO | 2174  |  736 |  240 |  750 |    0 |   697 |   697 |  1.97 |   5.49   |  1.90 |  131
+|TEAM_BATTING_SO | 2174  |  736 |  240 |  750 |    0 |  1399 |  1399 |       |          |       |  102
+|TEAM_BASERUN_SB | 2145  |  125 |      |  101 |    0 |   697 |   697 |       |          |       |  131  
 |TEAM_BASERUN_CS | 1504  |   53 |   23 |   49 |    0 |   201 |   201 |  1.98 |   7.62   |  0.59 |  772
 |TEAM_BATTING_HBP|  191  |   59 |   13 |   58 |   29 |    95 |    66 |  0.32 |  -0.11   |  0.94 | 2085
 |TEAM_PITCHING_H | 2276  | 1779 | 1407 | 1518 | 1137 | 30132 | 28995 | 10.33 | 141.84   | 29.49 |     
@@ -33,14 +32,33 @@ The original Training data set is comprised of 17 elements and 2277 total observ
 |TEAM_FIELDING_E | 2276  |  246 |  228 |  159 |   65 |  1898 |  1833 |  2.99 |  10.97   |  4.77 |      
 |TEAM_FIELDING_DP| 1990  |  146 |   26 |  149 |   52 |   228 |   176 | -0.39 |   0.18   |  0.59 |  286
 
+The first observation of the chart above show that there are missing values in 6 fields.  The problem is particularly significant for caught stealing.  A survey of box plots show that there are significant outliers in some of the data columns, especially in TEAM_PITCHING_H and TEAM_PITCHING_SO.
 
+![](HW1_writeup_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
 
-
-## Data Plots
-Bar Chart or Box Plot of the data
 
 ## Correlation Plot
-Is the data correlated to the target variable (or to other variables?)
+Using the cor function across the data frame we noticed some strong correlations.  TEAM_BATTING_H obviously has some colinearity with TEAM_BATTING_2B, TEAM_BATTING_3B and TEAM_BATTING_HR as these values are a subset of hits.  TEAM_BATTING_BB and TEAM_PITCHING_BB have strong correlations and so do TEAM_PITCHING_HR and TEAM_BATTING_HR.  Since we are most concerned with wins, the following table shows the correlation when the NA's are ommited:
+
+|Value             | Correlation with Wins
+------------------|----------------------
+|TEAM_BATTING_H    | 0.46994665
+|TEAM_BATTING_2B   | 0.31298400 
+|TEAM_BATTING_3B   |-0.12434586 
+|TEAM_BATTING_HR   | 0.42241683 
+|TEAM_BATTING_BB   | 0.46868793
+|TEAM_BATTING_SO   |-0.22889273
+|TEAM_BASERUN_SB   | 0.01483639
+|TEAM_BASERUN_CS   |-0.17875598
+|TEAM_BATTING_HBP  | 0.07350424
+|TEAM_PITCHING_H   | 0.47123431
+|TEAM_PITCHING_HR  | 0.42246683
+|TEAM_PITCHING_BB  | 0.46839882
+|TEAM_PITCHING_SO  |-0.22936481
+|TEAM_FIELDING_E   |-0.38668800 
+|TEAM_FIELDING_DP  | 0.13168916
+
+As a result of missing data, severe outliers, and collinearity shown above there is a clear need for some data preparation and transformation.
 
 __--------------------------------------------------------------------------------------------------------------------------__
 
@@ -64,6 +82,9 @@ The results of our data exploration efforts led us to drop three other variables
 
 3. __TEAM_PITCHING_HR__: This variable is 97% correlated with TEAM_BATTING_HR. In fact, 815 cases (more than 35% of our total cases) have *IDENTICAL* values for pitched and batted HR's.  This high degree of correlation may be due to the time series nature of the data: as baseball evolved, more home runs were hit, which naturally causes the number of pitched home runs to increase. The statistics are basically opposite sides of the same coin to a large degree (even if there may be some variability between individual teams in any given year). The fact that these two variables are nearly perfectly correlated indicates that one of them can legitimately be removed from the data set, and we chose __TEAM_PITCHING_HR__ since we believe the batting HR metric will be more predictive of TARGET_WINS than will the pitching HR statistic.
 
+These same three variables were subsequently removed from the Evaluation data set to ensure compatibility with our linear models. 
+
+
 ## Imputation of Missing Values (NA's)
 
 ### Filling Missing values in the Training Data Set
@@ -86,9 +107,7 @@ The variables we built imputation regression models for are described below. The
 
 These four imputation regression models were then used to populate missing values for the same variables within the evaluation data set. Clearly, any models we might have constructed for purposes of predicting WINS for the evaluation set would have failed to work on any records within that data set that contained NA's. Applying the imputation models to the evaluation data allows us to avoid that problem.
 
-## Removal of Extreme Outliers From Data Sets
-
-### Extreme Outlier Removal: Training Data
+## Removal of Extreme Outliers From the Training Data Set
 
 We completed our data preparation efforts by eliminating some clearly egregious outliers identified via research through *baseball-almanac.com*. This approach is suggested by Sheather (p. 57).  For example, the record for the most pitching strikeouts in a single season is 1450 by the 2014 Cleveland Indians. Therefore we know that any records having TEAM_PITCHING_SO values above that point is an aberration, and any records containing such values were summarily removed from the data set. 
 
@@ -98,13 +117,17 @@ The TEAM_PITCHING_H variable also appeared to have numerous egregious outliers. 
 
 Removing the egregious outliers resulting in a sum total of 104 records being removed from the training data set. Removal of these outliers helped to normalize our data and thereby improve the expected performance of our linear models.
 
-### Extreme Outlier Removal: Evaluation Data
+## Results of Imputation for Missing Values and Outlier Removal Process
 
-Similar extreme outliers were subsequently removed from the evaluation data set since it is unlikely that any regression models we might have built would have generated realistic predictive results for records containing such outliers. Of the 259 records contained in the evaluation data set, a total of 11 were removed by this process. 
+The end results of our data transformation process dramatically improved the data as you can see from the following plot.  There still are a few outliers but there are on a much smaller scale.
 
-__*As such, our Evaluation data set is comprised of a total of 248 records rather than the 259 records provided in the original data*__.
+![](HW1_writeup_files/figure-html/boxplot-slugging-1.png)<!-- -->
 
-Our Evaluation data set with the NA's filled and outliers removed can be found here:
+Our training data set with the NA's filled and the outliers removed can be found here:
+
+https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-Data.csv
+
+Our Evaluation data set with the NA's filled can be found here:
 
 https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-EvalData-.csv
 
@@ -474,12 +497,12 @@ INDEX  TARGET_WINS
    10           66
    14           72
    47           86
+   60           66
    63           73
    74           82
    83           71
    98           69
   120           74
-  123           68
 
 The full set of predicted TARGET_WINS can be found at the following web link:
 
@@ -490,15 +513,15 @@ __------------------------------------------------------------------------------
 # Part 5. References
 
 ## Bibliography
-Diez, D.M., Barr, C.D., & Cetinkaya-Rundel, M. (2015). OpenIntro Statistics (3rd Ed).
+Diez, D.M., Barr, C.D., & Cetinkaya-Rundel, M. (2015). OpenIntro Statistics, Third Edition.  Open Source. Print
 
-Faraway, J. J. (2015). Extending linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC.
+Faraway, J. J. (2015). Extending linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC. Print
 
-Faraway, J. J. (2015). Linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC.
+Faraway, J. J. (2015). Linear models with R, Second Edition. Boca Raton, Fla: Chapman & Hall/CRC. Print
 
-Fox, John, and John Fox. Applied Regression Analysis and Generalized Linear Models. Los Angeles: Sage, 2008. Print.
+Fox, John (2016). Applied Regression Analysis and Generalized Linear Models, Third Edition. Los Angeles: Sage. Print.
 
-Sheather, Simon J. A Modern Approach to Regression with R. New York, NY: Springer, 2009. Internet resource. 
+Sheather, Simon J. (2009). A Modern Approach to Regression with R. New York, NY: Springer. Print
 
 ## Resource Links
 http://www.baseball-almanac.com/  

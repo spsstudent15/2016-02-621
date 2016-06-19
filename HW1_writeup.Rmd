@@ -34,7 +34,8 @@ The original Training data set is comprised of 17 elements and 2277 total observ
 |TEAM_BATTING_3B | 2276  |   55 |   28 |   47 |    0 |   223 |   223 |  1.11 |   1.50   |  0.59 |    
 |TEAM_BATTING_HR | 2276  |  100 |   61 |  102 |    0 |   264 |   264 |  0.19 |  -0.96   |  1.27 |    
 |TEAM_BATTING_BB | 2276  |  502 |  123 |  512 |    0 |   878 |   878 | -1.03 |   2.18   |  2.57 |     
-|TEAM_BATTING_SO | 2174  |  736 |  240 |  750 |    0 |   697 |   697 |  1.97 |   5.49   |  1.90 |  131
+|TEAM_BATTING_SO | 2174  |  736 |  240 |  750 |    0 |  1399 |  1399 |       |          |       |  102
+|TEAM_BASERUN_SB | 2145  |  125 |      |  101 |    0 |   697 |   697 |       |          |       |  131  
 |TEAM_BASERUN_CS | 1504  |   53 |   23 |   49 |    0 |   201 |   201 |  1.98 |   7.62   |  0.59 |  772
 |TEAM_BATTING_HBP|  191  |   59 |   13 |   58 |   29 |    95 |    66 |  0.32 |  -0.11   |  0.94 | 2085
 |TEAM_PITCHING_H | 2276  | 1779 | 1407 | 1518 | 1137 | 30132 | 28995 | 10.33 | 141.84   | 29.49 |     
@@ -44,14 +45,37 @@ The original Training data set is comprised of 17 elements and 2277 total observ
 |TEAM_FIELDING_E | 2276  |  246 |  228 |  159 |   65 |  1898 |  1833 |  2.99 |  10.97   |  4.77 |      
 |TEAM_FIELDING_DP| 1990  |  146 |   26 |  149 |   52 |   228 |   176 | -0.39 |   0.18   |  0.59 |  286
 
+The first observation of the chart above show that there are missing values in 6 fields.  The problem is particularly significant for caught stealing.  A survey of box plots show that there are significant outliers in some of the data columns, especially in TEAM_PITCHING_H and TEAM_PITCHING_SO.
 
+```{r, eval = TRUE,include=TRUE, echo=FALSE}
+mb_train <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/moneyball-training-data.csv")
+boxplot(mb_train, xlab="Boxplot Predictor Comparitive") 
 
+```
 
-## Data Plots
-Bar Chart or Box Plot of the data
 
 ## Correlation Plot
-Is the data correlated to the target variable (or to other variables?)
+Using the cor function across the data frame we noticed some strong correlations.  TEAM_BATTING_H obviously has some colinearity with TEAM_BATTING_2B, TEAM_BATTING_3B and TEAM_BATTING_HR as these values are a subset of hits.  TEAM_BATTING_BB and TEAM_PITCHING_BB have strong correlations and so do TEAM_PITCHING_HR and TEAM_BATTING_HR.  Since we are most concerned with wins, the following table shows the correlation when the NA's are ommited:
+
+|Value             | Correlation with Wins
+------------------|----------------------
+|TEAM_BATTING_H    | 0.46994665
+|TEAM_BATTING_2B   | 0.31298400 
+|TEAM_BATTING_3B   |-0.12434586 
+|TEAM_BATTING_HR   | 0.42241683 
+|TEAM_BATTING_BB   | 0.46868793
+|TEAM_BATTING_SO   |-0.22889273
+|TEAM_BASERUN_SB   | 0.01483639
+|TEAM_BASERUN_CS   |-0.17875598
+|TEAM_BATTING_HBP  | 0.07350424
+|TEAM_PITCHING_H   | 0.47123431
+|TEAM_PITCHING_HR  | 0.42246683
+|TEAM_PITCHING_BB  | 0.46839882
+|TEAM_PITCHING_SO  |-0.22936481
+|TEAM_FIELDING_E   |-0.38668800 
+|TEAM_FIELDING_DP  | 0.13168916
+
+As a result of missing data, severe outliers, and collinearity shown above there is a clear need for some data preparation and transformation.
 
 __--------------------------------------------------------------------------------------------------------------------------__
 
@@ -111,6 +135,13 @@ The TEAM_PITCHING_H variable also appeared to have numerous egregious outliers. 
 Removing the egregious outliers resulting in a sum total of 104 records being removed from the training data set. Removal of these outliers helped to normalize our data and thereby improve the expected performance of our linear models.
 
 ## Results of Imputation for Missing Values and Outlier Removal Process
+
+The end results of our data transformation process dramatically improved the data as you can see from the following plot.  There still are a few outliers but notice the dramatically smaller scale.
+
+```{r boxplot-slugging, eval = TRUE,include=TRUE, echo=FALSE}
+mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv") 
+boxplot(mb_clean, xlab="Boxplot Predictor Comparitive") 
+```
 
 Our training data set with the NA's filled and the outliers removed can be found here:
 
