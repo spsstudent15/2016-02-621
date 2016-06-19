@@ -497,7 +497,7 @@ Here are statistics for predicted wins vs. the original training data set and ou
 
 #####Using the Model for Inference
 
-The standard errors of the coefficients in our selected model can be used to compute confidence intervals (CIs), prediction intervals (PIs), and perform hypothesis tests on the coefficients. However, such efforts are beyond the scope of this assignment.
+The standard errors of the model and the coefficients of its component variables can be used to compute confidence intervals (CIs), prediction intervals (PIs), and perform hypothesis tests on the coefficients. However, such efforts are beyond the scope of this assignment.
 
 #####Conclusion:
 The predicted wins in the evaluation data make sense.  They have a mean and median of 81 and show little skew.  The predictions range between 50 and 104, reasonable but not as varied as the ones in both the original training data and the data we processed to build the model.  Based just on looking at the key statistics our model performs well. After exploring the unique challenges of the data due to outliers and missing data, we improved our data through a new field (singles) elimination of 3 columns and 104 rows, and imputation of the remaining missing values.  After developing 5 distinct models using backward iterations, forward iterations, additional value combinations, Box Cox transformation and sabermetrics, we selected the best model.  While not perfect, the resulting predictions are a step forward in predicting how often a baseball team will win. 
