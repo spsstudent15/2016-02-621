@@ -3,12 +3,12 @@ title: 'Data 621 Homework 1: Moneyball'
 author: Critical Thinking Group 2 - Armenoush Aslanian-Persico, James Topor, Jeff
   Nieman, Scott Karr
 output:
+  pdf_document: default
   html_document:
     highlight: pygments
     keep_md: yes
     theme: cerulean
     toc: yes
-  pdf_document: default
   word_document: default
 ---
 
@@ -27,15 +27,15 @@ The original Training data set is comprised of 17 elements and 2277 total observ
 
 |variables       | n     | mean | sd   | med  | min  | max   | range |  skew | kurtosis | se    | NAs
 |--------------  | ----- | ---- | ---- | ---- | ---- | ----- | ----- | ----- | -------  | ----- | ---
-|INDEX           | 2276  | 1268 |  736 | 1271 |    1 | 2535  |  2534 |  0.00 |  -1.22   | 15.43 |     
+|INDEX           | 2276  | 1269 |  736 | 1271 |    1 | 2535  |  2534 |  0.00 |  -1.22   | 15.43 |     
 |TARGET_WINS     | 2276  |   81 |   16 |   82 |    0 |   146 |   146 | -0.40 |   1.03   |  0.33 |    
 |TEAM_BATTING_H  | 2276  | 1470 |  145 | 1454 |  891 |  2554 |  1663 |  1.57 |   7.28   |  3.03 |    
 |TEAM_BATTING_2B | 2276  |  241 |   47 |  238 |   69 |   458 |   389 |  0.22 |   0.01   |  0.98 |     
 |TEAM_BATTING_3B | 2276  |   55 |   28 |   47 |    0 |   223 |   223 |  1.11 |   1.50   |  0.59 |    
 |TEAM_BATTING_HR | 2276  |  100 |   61 |  102 |    0 |   264 |   264 |  0.19 |  -0.96   |  1.27 |    
 |TEAM_BATTING_BB | 2276  |  502 |  123 |  512 |    0 |   878 |   878 | -1.03 |   2.18   |  2.57 |     
-|TEAM_BATTING_SO | 2174  |  736 |  240 |  750 |    0 |  1399 |  1399 |       |          |       |  102
-|TEAM_BASERUN_SB | 2145  |  125 |      |  101 |    0 |   697 |   697 |       |          |       |  131  
+|TEAM_BATTING_SO | 2174  |  736 |  240 |  750 |    0 |  1399 |  1399 | -0.30 |  -0.32   |  5.33 |  102
+|TEAM_BASERUN_SB | 2145  |  125 |   88 |  101 |    0 |   697 |   697 |  1.97 |   5.49   |  1.90 |  131  
 |TEAM_BASERUN_CS | 1504  |   53 |   23 |   49 |    0 |   201 |   201 |  1.98 |   7.62   |  0.59 |  772
 |TEAM_BATTING_HBP|  191  |   59 |   13 |   58 |   29 |    95 |    66 |  0.32 |  -0.11   |  0.94 | 2085
 |TEAM_PITCHING_H | 2276  | 1779 | 1407 | 1518 | 1137 | 30132 | 28995 | 10.33 | 141.84   | 29.49 |     
@@ -45,7 +45,7 @@ The original Training data set is comprised of 17 elements and 2277 total observ
 |TEAM_FIELDING_E | 2276  |  246 |  228 |  159 |   65 |  1898 |  1833 |  2.99 |  10.97   |  4.77 |      
 |TEAM_FIELDING_DP| 1990  |  146 |   26 |  149 |   52 |   228 |   176 | -0.39 |   0.18   |  0.59 |  286
 
-The first observation of the chart above show that there are missing values in 6 fields.  The problem is particularly significant for caught stealing.  A survey of box plots show that there are significant outliers in some of the data columns, especially in TEAM_PITCHING_H and TEAM_PITCHING_SO.
+The first observation of the chart above show that there are missing values in 6 fields (especially TEAM_BATTING_HBP and TEAM_BASERUN_CS). In addition several of the values such as TEAM_PITCHING_H, TEAM_PITCHING_BB and TEAM_PITCHING_SO struggle with skew and kurtosis.  A survey of box plots show that there are significant outliers in some of the data columns, especially in TEAM_PITCHING_H and TEAM_PITCHING_SO.
 
 ```{r, eval = TRUE,include=TRUE, echo=FALSE}
 mb_train <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/moneyball-training-data.csv")
@@ -55,7 +55,7 @@ boxplot(mb_train, xlab="Boxplot Predictor Comparitive")
 
 
 ## Correlation Plot
-Using the cor function across the data frame we noticed some strong correlations.  TEAM_BATTING_H obviously has some colinearity with TEAM_BATTING_2B, TEAM_BATTING_3B and TEAM_BATTING_HR as these values are a subset of hits.  TEAM_BATTING_BB and TEAM_PITCHING_BB have strong correlations and so do TEAM_PITCHING_HR and TEAM_BATTING_HR.  Since we are most concerned with wins, the following table shows the correlation when the NA's are ommited:
+Using the cor function across the data frame we noticed some strong correlations.  TEAM_BATTING_H obviously has some colinearity with TEAM_BATTING_2B, TEAM_BATTING_3B and TEAM_BATTING_HR as these values are a subset of hits.  TEAM_BATTING_BB and TEAM_PITCHING_BB have strong correlations and so do TEAM_PITCHING_HR and TEAM_BATTING_HR.  Since we are most concerned with wins, the following table shows the correlation when the NA's are omitted:
 
 |Value             | Correlation with Wins
 ------------------|----------------------
@@ -141,6 +141,7 @@ The end results of our data transformation process dramatically improved the dat
 ```{r boxplot-slugging, eval = TRUE,include=TRUE, echo=FALSE}
 mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv") 
 boxplot(mb_clean, xlab="Boxplot Predictor Comparitive") 
+summary(mb_clean)
 ```
 
 Our training data set with the NA's filled and the outliers removed can be found here:
@@ -150,6 +151,27 @@ https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-Data.cs
 Our Evaluation data set with the NA's filled can be found here:
 
 https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-EvalData-.csv
+
+The summary of the clean data is as follows:
+
+
+|variables       | n     | mean | sd   | med  | min  | max   | range |  skew | kurtosis | se    | NAs
+|--------------  | ----- | ---- | ---- | ---- | ---- | ----- | ----- | ----- | -------  | ----- | ---
+|TARGET_WINS     | 2172  |   81 |   15 |   82 |   21 |   135 |   114 | -0.22 |   0.08   |  0.31 |    
+|TEAM_BATTING_2B | 2172  |  242 |   46 |  239 |  118 |   458 |   340 |  0.23 |  -0.13   |  0.98 |     
+|TEAM_BATTING_3B | 2172  |   54 |   27 |   47 |   11 |   190 |   179 |  0.99 |   0.65   |  0.58 |    
+|TEAM_BATTING_HR | 2172  |  103 |   59 |  107 |    3 |   264 |   261 |  0.16 |  -0.93   |  1.27 |    
+|TEAM_BATTING_BB | 2172  |  516 |  100 |  518 |   73 |   878 |   805 | -0.32 |   0.96   |  2.15 |     
+|TEAM_BATTING_SO | 2172  |  744 |  226 |  745 |  252 |  1399 |  1147 |  0.06 |  -0.98   |  4.85 |  
+|TEAM_BASERUN_SB | 2172  |  131 |   93 |  103 |   18 |   697 |   679 |  1.75 |   3.91   |  1.99 |    
+|TEAM_PITCHING_H | 2172  | 1575 |  256 | 1508 | 1137 |  2960 |  1823 |  2.10 |   5.88   |  5.48 |     
+|TEAM_PITCHING_BB| 2172  |  551 |  107 |  538 |  144 |  1123 |   979 |  0.70 |   1.40   |  2.29 |      
+|TEAM_PITCHING_SO| 2172  |  789 |  223 |  797 |  301 |  1434 |  1133 |  0.15 |  -0.63   |  4.79 |  
+|TEAM_FIELDING_E | 2172  |  213 |  148 |  155 |   65 |  1965 |   900 |  2.18 |   4.55   |  3.18 |      
+|TEAM_FIELDING_DP| 2172  |  143 |   28 |  146 |   56 |   228 |   172 | -0.30 |  -0.14   |  0.59 |  
+|TEAM_BATTING_1B | 2172  | 1061 |  102 | 1046 |  811 |  1656 |   845 |  0.89 |   1.49   |  2.20 |
+
+In comparison with the same chart there are much smaller skews kurtosis and se, and the wild ranges in values such as pitching hits and pitching strikeouts have been reduced.
 
 ## Other Data Prepation Transformations: Refer to Model Descriptions
 
@@ -161,20 +183,7 @@ __------------------------------------------------------------------------------
 
 ## Model 1:  General Model Using Backward Selection
 
-This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
-
-- TEAM_BATTING_1B (derived variable)  
-- TEAM_BATTING_2B  
-- TEAM_BATTING_3B  
-- TEAM_BATTING_HR  
-- TEAM_BATTING_BB  
-- TEAM_BATTING_SO  
-- TEAM_BASERUN_SB  
-- TEAM_PITCHING_H  
-- TEAM_PITCHING_BB  
-- TEAM_PITCHING_SO  
-- TEAM_FIELDING_E  
-- TEAM_FIELDING_DP  
+This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against all 12 remaining predictor variables:
 
 Simply removing the *TEAM_BATTING_1B* variable yielded a model with all p-values less than $.05$. However, VIF analysis showed evidence of multiple collinear variables within the model. Subsequent removals of *TEAM_PITCHING_SO* and *TEAM_PITCHING_BB* due to collinearity yielded a model that called for the removal of *TEAM_BATTING_2B* on the basis of its p-value.
 
@@ -263,17 +272,7 @@ rm(mb_t)
 
 ```
 
-This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
-
-- TEAM_TOTAL_BASES (derived variable)  
-- TEAM_BATTING_BB  
-- TEAM_BATTING_SO  
-- TEAM_BASERUN_SB  
-- TEAM_PITCHING_H  
-- TEAM_PITCHING_BB  
-- TEAM_PITCHING_SO  
-- TEAM_FIELDING_E  
-- TEAM_FIELDING_DP  
+This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against a derived value for total bases and the remaining 8 predictors:
 
 Three iterations of p-value / VIF backward selection removed TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
 
@@ -358,15 +357,7 @@ rm(mb_t)
 
 ```
 
-This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the following predictor variables:
-
-- TB_PLUS (derived variable)  
-- TEAM_BATTING_SO  
-- TEAM_PITCHING_H  
-- TEAM_PITCHING_BB  
-- TEAM_PITCHING_SO  
-- TEAM_FIELDING_E  
-- TEAM_FIELDING_DP  
+This model applies simple Backward Selection methods through the use of p-values and variance inflation factors (VIF) against the derived value for TB_PLUS and the remianing 6 predictor variables:
 
 Four iterations of p-value / VIF backward selection removed TEAM_PITCHING_H, TEAM_PITCHING_SO and TEAM_PITCHING_BB from the model. All other variables remained statistically significant with no signficant collinearity. However, evidence of multiple outliers was found via R's summary diagnostic plots. Those outliers were removed via a series of additional iterations yielding the following final model:
 
