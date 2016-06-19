@@ -1921,7 +1921,6 @@ fit1 <- test.1$fitted.values
 par(mfrow = c(1,1))
 plot(fit1, test.1$TARGET_WINS,xlab="Fitted Values")
 ```
-```
 #Model 5
 
 ### SINGLE PREDICTOR ANALYSIS & TRANSFORMATIONS
