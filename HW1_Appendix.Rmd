@@ -3508,7 +3508,3 @@ write.csv(eval.3, file = "C:/SQLData/HW1-PRED-EVAL-WINS-ONLY.csv", row.names = F
 rm(list = ls())
 ```
 
-
-
-# Conclusion
-
