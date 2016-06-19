@@ -1,15 +1,38 @@
 ---
-title: "Data 621 Homework 1: Code Appendix"
+title: 'Data 621 Homework 1: Code Appendix'
 author: "Jeff Nieman, Scott Karr, James Topor, Armenoush Aslanian-Persico"
-output: 
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
   html_document:
-    toc: true
-    toc_depth: 2
-    toc_float: true
     code_folding: show
     theme: spacelab
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
 ---
 
+This Appendix contains all of the source R code and associated relevant output from our final writeup and our model building efforts. The R code is organized to match up to the relevant sections of the Writeup document. 
+
+However, we begin here by providing the full ouput of our "best" linear model as indicated in Part 4 of the final writeup document.
+
+# Full Results of our "Best" Model
+
+The table displayed below presents the results of our selected linear model's TARGET_WINS estimates for the 259 records contained in the  Evaluation data set:
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+library(knitr)
+
+# read clean data set from Github
+
+eval.w <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/HW1-PRED-EVAL-WINS-ONLY.csv")  
+
+# display all data
+kable(eval.w, align = 'l', padding = 0)
+
+rm(eval.w)
+```
 
 # Part 1. Data Exploration
 
@@ -17,7 +40,7 @@ output:
 library(alr3)
 library(car)
 library(corrplot)
-library(fBasics)
+# library(fBasics)
 library(knitr)
 library(MASS)
 ```
@@ -41,7 +64,7 @@ boxplot(mb_train, xlab="Boxplot Predictor Comparitive")
 
 Look for correlations among values
 
-```{r, echo=FALSE}
+```{r, echo = TRUE}
 m <- na.omit(mb_train)
 cor(m)
 
@@ -176,7 +199,7 @@ summary(mb_e6)
 ## Data Imputation
 
 
-```{r, eval=TRUE, include=TRUE}
+```{r, eval=FALSE, include=TRUE}
 
 # read EVALUATION data set
 eval_data <- read.csv("https://raw.githubusercontent.com/jtopor/CUNY-MSDA-621/master/HW-1/moneyball-evaluation-data.csv")
@@ -206,7 +229,7 @@ eval_data$TARGET_WINS <- 0
 
 #####Eliminate HBP, CS, and pitching HR's.
 
-```{r, eval=TRUE, include=TRUE}
+```{r, eval=FALSE, include=TRUE}
 mb <- mb_e1[,-c(9,10,12)]
 # summary(mb)
 
@@ -215,7 +238,7 @@ eval_data <- eval_data[,-c(8,9,11)]
 ```
 
 #####Build model for batting SO using Gelman approach
-```{r, eval=TRUE, include=TRUE}
+```{r, eval=FALSE, include=TRUE}
 
 #take out double plays + pitching SO + SB as data set is incomplete + Wins as they are not present in the evaluation data
 
@@ -292,7 +315,7 @@ eval_data.1$TEAM_BATTING_SO <- eval.BSO.imp
 
 ##### Build model for Pitching SO
 
-```{r, eval=TRUE, include=TRUE}
+```{r, eval=FALSE, include=TRUE}
 #take out double plays + SB as data set is incomplete and wins as they are not present in evaluation data
 
 PSO.1 <- lm(data=mb1, TEAM_PITCHING_SO~. - INDEX -TEAM_FIELDING_DP -TEAM_BASERUN_SB - TARGET_WINS)
@@ -353,7 +376,7 @@ eval_data.2$TEAM_PITCHING_SO <- eval.PSO.imp
 ```
 
 #####Build model for SB
-```{r, eval=TRUE, include=TRUE}
+```{r, eval=FALSE, include=TRUE}
 #Take out DP as incomplete data and target wins
 SB.1 <- lm(data=mb2, TEAM_BASERUN_SB~. -INDEX -TEAM_FIELDING_DP - TARGET_WINS)
 summary(SB.1)
@@ -427,7 +450,7 @@ eval_data.3$TEAM_BASERUN_SB <- eval.SB.imp
 ```
 
 #####Build model to replace DP
-```{r, eval=TRUE, include=TRUE}
+```{r, eval=FALSE, include=TRUE}
 
 #remove target wins
 DP.1 <- lm(data=mb3, TEAM_FIELDING_DP~. - INDEX -TARGET_WINS)
@@ -520,7 +543,7 @@ eval_data.4$TEAM_FIELDING_DP <- eval.DP.imp
 
 #####Eliminate unhistorical outliers - DO THIS FOR THE EVAL DATA AS WELL
 
-```{r, eval=TRUE, include=TRUE}
+```{r, eval=FALSE, include=TRUE}
 
 # check rowcount before removal of outliers
 nrow(mb4)
@@ -533,7 +556,7 @@ mb5 <- mb4
 # fixed error in this line: dataframe in 'which' call was mb1 so changed to mb5
 mb5 <- mb5[which(mb5$TEAM_PITCHING_SO < 1450),]
 
-eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_SO < 1450),]
+# eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_SO < 1450),]
 
 # check rowcount
 nrow(mb5)
@@ -544,7 +567,7 @@ nrow(eval_data.4)
 mb6 <- mb5
 mb6 <- mb6[which(mb6$TEAM_PITCHING_H < 3001),]
 
-eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_H < 3001),]
+# eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_PITCHING_H < 3001),]
 
 # check rowcount
 nrow(mb6)
@@ -553,7 +576,7 @@ nrow(eval_data.4)
 ############ TEAM_FIELDING_E ##############################
 #most ever errors by a team is 639 by 1883 Philadelphia.  Prorating to 162 games gives a value of 1046.
 mb7 <- mb6
-mb7 <- mb7[which(mb7$TEAM_FIELDING_E < 1047),]
+# mb7 <- mb7[which(mb7$TEAM_FIELDING_E < 1047),]
 
 eval_data.4 <- eval_data.4[which(eval_data.4$TEAM_FIELDING_E < 1047),]
 
@@ -603,13 +626,13 @@ boxplot(mb7, xlab="Boxplot Predictor Comparitive")
 # Model 1: General Model Using Backward Selection
 
 
-```{r part3}
+```{r}
 library(car)
 
 mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv")  
 ```
 
-```{r, eval = FALSE, echo = FALSE}
+```{r, eval = FALSE}
 
 library(alr3)
 
@@ -1078,9 +1101,6 @@ rm(list = ls())
 
 
 # Model 2: Total Bases
-
-
-
 
 
 
@@ -1859,7 +1879,7 @@ rm(list = ls())
 # Model 4: Sabermetrics Model
 
 
-```{r model4}
+```{r}
 #Define BSR
 mb_clean <- read.csv("https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1/master/621-HW1-Clean-Data.csv") 
 mb8 <- mb_clean
@@ -1920,8 +1940,11 @@ fit1 <- test.1$fitted.values
 
 par(mfrow = c(1,1))
 plot(fit1, test.1$TARGET_WINS,xlab="Fitted Values")
+
+rm(list = ls())
 ```
-#Model 5
+
+# Model 5
 
 ### SINGLE PREDICTOR ANALYSIS & TRANSFORMATIONS
 #####Model SMK Generlized Equation
@@ -1929,7 +1952,7 @@ Review descriptive statistics to confirm each variable is within acceptable boun
 contains no missing data.  Review Density plots of 13 variables for skewness to identify
 which may require transformation.  
 
-```{r full, eval = TRUE,include=FALSE, echo=FALSE}
+```{r full, eval = FALSE,include=TRUE, echo=TRUE}
 #assign model to "clean" data set 
 lm.smk <- mb7
 #remove bad leverage points from diagnostic tests
@@ -2161,7 +2184,7 @@ par(mfrow=c(1,1))
 
 ##### Evaluate Correlations  
 Evaluate Correlation between predictors so as to not introduce collinearity into the model.
-```{r correlation, eval=TRUE, echo=FALSE}
+```{r correlation, eval=FALSE, echo=TRUE}
 # assign model one "lm.1" to data set with all NA's imputed and "bad" leverage points removed
 par(cex = 0.65)
 corrplot(
@@ -2175,16 +2198,10 @@ nrow(lm.smk)
 ```
 
 ##### Model Selection Strategy
-Two common strategies for adding or removing variables in a multiple regression model are
-called backward elimination and forward selection. These techniques are often referred to
-as stepwise model selection strategies, because they add or delete one variable at a time
-as they “step” through the candidate predictors.  Model 1 uses the forward selection strategy 
-which adds variables two-at-a-time until variables cannot be found that improve the model 
-as measured by adjusted $R^2$.
-Diez, D.M., Barr, C.D., & Çetinkaya-Rundel, M. (2015). OpenIntro Statistics (3rd Ed). pg. 378
+
 
 #####Start with p.Hits & p.Walks
-```{r m1-iteration1,eval=TRUE,include=FALSE}
+```{r m1-iteration1,eval=FALSE,include=TRUE}
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
@@ -2238,7 +2255,7 @@ plot(m1)
 ```
 
 #####Add b.Singles & b.Doubles
-```{r m1-interation2,eval=TRUE,include=FALSE}
+```{r m1-interation2,eval=FALSE,include=TRUE}
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
@@ -2261,7 +2278,7 @@ vif(m1)
 ```
 
 #####Removed p.Hits
-```{r m1-interation3,eval=TRUE,include=FALSE}
+```{r m1-interation3,eval=FALSE,include=TRUE}
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
@@ -2317,7 +2334,7 @@ plot(m1)
 ```
 
 #####Added Stolen Bases and Double Plays
-```{r m1-interation4,eval=TRUE,include=FALSE}
+```{r m1-interation4,eval=FALSE,include=TRUE}
 nrow(lm.smk)
 #VARIABLES
 #variables have been transformed first as individual predictors
@@ -2380,7 +2397,7 @@ plot(m1)
 ```
 
 #####Added b.Walks and p.Strikeouts
-```{r m1-interation5,eval=TRUE,include=FALSE}
+```{r m1-interation5,eval=FALSE,include=TRUE}
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
@@ -2407,7 +2424,7 @@ vif(m1)
 ```
 
 #####Remove b.Walks
-```{r m1-interation6,eval=TRUE,include=FALSE}
+```{r m1-interation6,eval=FALSE,include=TRUE}
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
@@ -2432,7 +2449,7 @@ vif(m1)
 ```
 
 #####Add b.StrikeOuts, & b.Slugging
-```{r m1-interation7,eval=TRUE,include=FALSE}
+```{r m1-interation7,eval=FALSE,include=TRUE}
 nrow(lm.smk)
 #VARIABLES
 #variables have been transformed first as individual predictors
@@ -2516,7 +2533,7 @@ plot(m1)
                     \end{aligned}
 \]
 nrow(lm.smk)
-```{r m1-interation8,eval=TRUE}
+```{r m1-interation8, eval=FALSE}
 #VARIABLES
 #variables have been transformed first as individual predictors
 Wins  <- mW
@@ -2591,7 +2608,7 @@ plot(m1)
 
 # Part 4. Select Models
 
-```{r part4}
+```{r part4, eval=FALSE}
 #########################################################################################
 # 
 # This file loads our preferred predictive model (TOTAL BASES PLUS)
@@ -2666,7 +2683,7 @@ model.4 <- lm(data=mb_tbp, TARGET_WINS ~ . - INDEX - TEAM_PITCHING_BB - TEAM_PIT
 # summary(model.4)
 ```
 
-```{r}
+```{r, eval = FALSE}
 # Now load evaluation data set and predict TARGET WINS
 
 # load EVAL data set
