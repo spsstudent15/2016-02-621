@@ -21,7 +21,7 @@ __------------------------------------------------------------------------------
 
 ## Data Summary 
 
-The original Training data set is comprised of 17 elements and 2277 total observations.  Of those 17 elements, INDEX is simply an index value used for sorting while TARGET_WINS represents the response variable we are to use within our regression models. The remaining 15 elements are all potential predictor variables for our linear models. A summary table for the data set is provided below.
+The original Training data set is comprised of 17 elements and 2276 total observations.  Of those 17 elements, INDEX is simply an index value used for sorting while TARGET_WINS represents the response variable we are to use within our regression models. The remaining 15 elements are all potential predictor variables for our linear models. A summary table for the data set is provided below.
 
 |variables       | n     | mean | sd   | med  | min  | max   | range |  skew | kurtosis | se    | NAs
 |--------------  | ----- | ---- | ---- | ---- | ---- | ----- | ----- | ----- | -------  | ----- | ---
