@@ -559,3 +559,8 @@ https://raw.githubusercontent.com/spsstudent15/2016-02-621-W1
 
 http://tangotiger.net/wiki_archive/Base_Runs.html
 
+# Appendix
+
+The Appendix to this document containing all of the R code used for this assignment (as well as other relevant output) can be found in a separate PDF file accessible via this web link:
+
+https://github.com/spsstudent15/2016-02-621-W1/blob/master/HW1_Appendix.pdf
