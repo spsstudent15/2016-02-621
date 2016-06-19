@@ -82,7 +82,7 @@ Our data preparation efforts for the training data set include the creation of o
 
 ##Step 1: New Variable Creation
 
-We began our data preparation efforts by creating a new variable TEAM_BATTING_1B which represents offensive single base hits. The variable was created by subtracting out the TEAM_BATTING doubles, triples and home runs from the TEAM_BATTING_H variable. This derived variable was created since we believe that separating out singles from the other unique hit values will minimize collinearity. The TEAM_BATTING_H variable is then removed from the data set since it is simply a linear combination of its component variables., 
+We began our data preparation efforts by creating a new variable TEAM_BATTING_1B which represents offensive single base hits. (created by subtracting out the TEAM_BATTING doubles, triples and home runs from the TEAM_BATTING_H variable). We believe that separating out singles from the other unique hit values will minimize collinearity. The TEAM_BATTING_H variable is then removed from the data set since it is simply a linear combination of its component variables., 
 
 ##Step 2:  Removal of Variables Due to Collinearity and/or Missing Values
 
@@ -261,7 +261,7 @@ This model applies simple Backward Selection methods through the use of p-values
 | 11.7  | 0.3365  | 0.3343    | 156     | 137
 
 #####Transformation Iterations
-Once again, the diagnostic plots of that model show a lack of linearity between the response variable TARGET_WINS and one of the predictor variables (TEAM_FIELDING_E). Furthermore, the plots of standardized residuals against each of the predictor variables show evidence of non-constant variability for variables such as TEAM_BATTING_SO, TEAM_BASERUN_SB, and TEAM_FIELDING_E. using a Box-Cox recommended power transform of (-1), or (1/y) we transformed TEAM_FIELDING_E creating a new model. The resulting Added Variable plots show that all predictors are linearly related to the response, and the variability of the residuals improve. Furthermore, the plot of Y against the fitted values shows an improvement in the linearity of the model. Therefore, this model appears to be an improvement over the first TOTAL_BASES model and the equation indicated by the model is as follows:
+Once again, the diagnostic plots of that model show a lack of linearity between the response variable TARGET_WINS and one of the predictor variables (TEAM_FIELDING_E). Furthermore, the plots of standardized residuals against each of the predictor variables show evidence of non-constant variability for variables such as TEAM_BATTING_SO, TEAM_BASERUN_SB, and TEAM_FIELDING_E using a Box-Cox recommended power transform of (-1), or (1/y) we transformed TEAM_FIELDING_E creating a new model. The resulting Added Variable plots show that all predictors are linearly related to the response, and the variability of the residuals improve. Furthermore, the plot of Y against the fitted values shows an improvement in the linearity of the model. Therefore, this model appears to be an improvement over the first TOTAL_BASES model and the equation indicated by the model is as follows:
 
 | Coefficient   | Variable  
 | ------------  | ------------
