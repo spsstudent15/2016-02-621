@@ -466,10 +466,8 @@ The Box-Cox First model makes use of a recommended Box-Cox transform for each in
 Of the remaining two, the Sabermetrics model yields a slightly large $R^2$ value showing a slightly better possible fit.  However, the TB Plus model is simpler it make as it uses only 4 predictor variables while possessing a much larger F-statistic. Such a large difference in F-statistics indicates that the TB Plus model is explaining more of the variability of the training data than is the Sabermetrics model.  Therefore, __we select the TB PLUS model__ as the basis for our prediction of TARGET_WINS for the Evaluation data set. 
 
 #####Step 4:  Apply to the evaluation data
-To ensure the model's efficacy when applied to the Evaluation data set, we first apply a set of transformations to that data set identical to those applied to the Training data set during the development of the TB PLUS model. The TB PLUS model is then applied to yield a set of INDEX / TARGET_WINS pairs.
-
-Since displaying the full set of predicted values would consume a large number of pages, a sample of the first 10 rows of that data set is displayed as an example:
-
+To ensure the model's efficacy when applied to the Evaluation data set, we first apply a set of transformations to that data set identical to those applied to the Training data set during the development of the TB PLUS model. The TB PLUS model is then applied to yield a set of INDEX / TARGET_WINS pairs.  Since displaying the full set of predicted values would consume a large number of pages, a sample of the first 10 rows of that data set is displayed as an example:
+ 
 ```{r, echo = FALSE, warning=FALSE, message=FALSE}
 
 # read clean data set from Github
@@ -482,20 +480,26 @@ kable(head(eval.w, n = 10), alingn = 'l', padding = 0)
 rm(eval.w)
 ```
 
-The full set of predicted TARGET_WINS can be found at the following web link:
+Here are statistics for predicted wins vs. the original training data set and our prepared version from part 2:
 
+|Set             |  n   |  Mean  |  sd  |  Median |  Min  |  Max  | Range | Skew | Kurtosis| SE  
+|----------------|------|--------|------|---------|-------|-------|-------|------|---------|-----
+|Predicted Model |  259 |  81    |   9  |    81   |  50   |  104  |  54   |-0.05 |  0.35   | 0.55
+|Training Data   | 2276 |  81    |  16  |    82   |   0   |  146  | 146   |-0.40 |  1.03   | 0.33 
+|Prepared Data   | 2172 |  81    |  15  |    82   |  21   |  135  | 114   |-0.22 |  0.08   | 0.31
+
+#####Conclusion:
+The predicted wins in the evaluation data make sense.  They have a mean and median of 81 and show little skew.  The predictions range between 50 and 104, reasonable but not as varied as the ones in both the original training data and the data we processed to build the model.  Based just on looking at the key statistics our model performs well. After exploring the unique challenges of the data due to outliers and missing data, we improved our data through a new field (singles) elimation of 3 columns and 104 rows, and imputation of the remaining missing values.  After developing 5 distinct models using backward iterations, forward iterations, additional value combinations, Box Cox transformation and sabermetrics, we selected the best model.  While not perfect, the resulting predictions are a step forward in predicting how often a baseball team will win. 
+
+The full set of predicted TARGET_WINS can be found at the following web link:
 https://github.com/spsstudent15/2016-02-621-W1/blob/master/HW1-PRED-EVAL-WINS-ONLY.csv
 
 The Evaluation data set can be found here:
-
 https://github.com/spsstudent15/2016-02-621-W1/blob/master/621-HW1-Clean-EvalData-.csv
 
-#####Conclusion:
-After exploring the unique challenges of the data due to outliers and missing data, we improved our data through a new field (singles) elimation of 3 columns and 104 rows, and imputation of the remaining missing values.  After developing 5 distinct models using backward iterations, forward iterations, additional value combinations, Box Cox transformation and sabermetrics, we selected the best model.  While not perfect, the resulting predictions are a step forward in predicting how often a baseball team will win.
 __--------------------------------------------------------------------------------------------------------------------------__
 
 # Part 5. References
-
 ## Bibliography
 Diez, D.M., Barr, C.D., & Cetinkaya-Rundel, M. (2015). OpenIntro Statistics, Third Edition.  Open Source. Print
 
